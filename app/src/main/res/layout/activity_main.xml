@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:fitsSystemWindows="true"
+    android:orientation="vertical">
+
+    <com.jenshen.widgetview.WidgetContainerLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+
+        <com.jenshen.widgetview.WidgetView
+            android:layout_width="140dp"
+            android:layout_height="140dp"
+            android:background="@color/colorPrimary">
+
+            <!-- <ImageView
+                 android:layout_width="match_parent"
+                 android:layout_height="match_parent"
+                 android:background="@color/colorAccent" />-->
+
+        </com.jenshen.widgetview.WidgetView>
+    </com.jenshen.widgetview.WidgetContainerLayout>
+
+</LinearLayout>
