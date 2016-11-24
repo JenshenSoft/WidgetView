@@ -29,7 +29,5 @@ public class WidgetContainerLayout extends FrameLayout {
     @Override
     protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
         super.onMeasure(widthMeasureSpec, heightMeasureSpec);
-        getChildAt(0).setX(200);
-        getChildAt(0).setY(200);
     }
 }

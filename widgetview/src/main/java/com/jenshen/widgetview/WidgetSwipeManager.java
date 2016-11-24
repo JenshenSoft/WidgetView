@@ -15,7 +15,7 @@ public class WidgetSwipeManager implements View.OnTouchListener {
     }
 
     @Override
-    public boolean onTouch(View view, MotionEvent motionEvent) {
+    public boolean onTouch(final View view, MotionEvent motionEvent) {
        /* if (isDragMotion) {
             return true;
         }*/
@@ -69,14 +69,15 @@ public class WidgetSwipeManager implements View.OnTouchListener {
                         return true;
                     case MotionEvent.ACTION_MOVE:
                         Log.e("TAG", "ACTION_MOVE");
-                        float x = motionEvent.getX();
+                        final float x = motionEvent.getX();
                         float y = motionEvent.getY();
                         final ViewGroup.LayoutParams layoutParams = rootView.getLayoutParams();
-                        //layoutParams.width = (int) (layoutParams.width + x / 2);
+                        layoutParams.width = (int) (layoutParams.width - x / 2);
                         layoutParams.height = (int) (layoutParams.height + y / 2);
                         //rootView.setY(rootView.getY() + y - (view.getMeasuredHeight() / 2));
                         rootView.setLayoutParams(layoutParams);
                         rootView.setX(rootView.getX() + x - (view.getMeasuredWidth() / 2));
+
                         return true;
                     case MotionEvent.ACTION_CANCEL:
                     case MotionEvent.ACTION_UP:
@@ -93,14 +94,10 @@ public class WidgetSwipeManager implements View.OnTouchListener {
                         Log.e("TAG", "ACTION_MOVE");
                         float x = motionEvent.getX();
                         float y = motionEvent.getY();
-                        /*final ViewGroup.LayoutParams layoutParams = rootView.getLayoutParams();
+                        final ViewGroup.LayoutParams layoutParams = rootView.getLayoutParams();
                         layoutParams.width = (int) (layoutParams.width + x - (view.getMeasuredWidth() / 2));
                         layoutParams.height = (int) (layoutParams.height + y - (view.getMeasuredHeight() / 2));
-                        rootView.setLayoutParams(layoutParams);*/
-                        rootView.setRight((int) (rootView.getMeasuredWidth() + x - (view.getMeasuredWidth() / 2)));
-                        rootView.setBottom((int) (rootView.getMeasuredHeight() + x - (view.getMeasuredHeight() / 2)));
-                        rootView.invalidate();
-
+                        rootView.setLayoutParams(layoutParams);
                         return true;
                     case MotionEvent.ACTION_CANCEL:
                     case MotionEvent.ACTION_UP:
