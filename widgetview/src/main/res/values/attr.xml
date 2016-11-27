@@ -4,5 +4,18 @@
     <declare-styleable name="WidgetView_Params">
         <attr name="widgetView_pointWidth" format="dimension" />
         <attr name="widgetView_pointHeight" format="dimension" />
+        <attr name="widgetView_corner_topLeft_columnLine" format="integer" />
+        <attr name="widgetView_corner_topLeft_rowLine" format="integer" />
+        <attr name="widgetView_corner_topRight_columnLine" format="integer" />
+        <attr name="widgetView_corner_topRight_rowLine" format="integer" />
+        <attr name="widgetView_corner_bottomLeft_columnLine" format="integer" />
+        <attr name="widgetView_corner_bottomLeft_rowLine" format="integer" />
+        <attr name="widgetView_corner_bottomRight_columnLine" format="integer" />
+        <attr name="widgetView_corner_bottomRight_rowLine" format="integer" />
+    </declare-styleable>
+
+    <declare-styleable name="WidgetContainerLayout_Params">
+        <attr name="widgetContainer_columnCount" format="integer" />
+        <attr name="widgetContainer_rowCount" format="integer" />
     </declare-styleable>
 </resources>
