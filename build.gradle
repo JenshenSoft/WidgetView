@@ -1,5 +1,25 @@
 // Top-level build file where you can add configuration options common to all sub-projects/modules.
 
+ext {
+    configuration = [
+            buildToolsVersion: "25",
+            compileSdkVersion: 25,
+            minSdkVersion    : 14,
+            targetSdkVersion : 25,
+            versionCode      : 1,
+            versionName      : "0.11"
+    ]
+
+    libraries = [
+            supportVersion            : "25.0.1"
+    ]
+
+    testingLibraries = [
+            junit          : "4.12",
+            espressoVersion: "2.2.2"
+    ]
+}
+
 buildscript {
     repositories {
         jcenter()
@@ -7,14 +27,18 @@ buildscript {
     dependencies {
         classpath 'com.android.tools.build:gradle:2.3.0-alpha1'
 
-        // NOTE: Do not place your application dependencies here; they belong
-        // in the individual module build.gradle files
+        // Required plugins added to classpath to facilitate pushing to Jcenter/Bintray
+        classpath 'com.jfrog.bintray.gradle:gradle-bintray-plugin:1.4'
+        classpath 'com.github.dcendents:android-maven-gradle-plugin:1.5'
     }
 }
 
 allprojects {
     repositories {
         jcenter()
+        maven {
+            url  "http://dl.bintray.com/jenshen1992/ua.jenshensoft"
+        }
     }
 }
 

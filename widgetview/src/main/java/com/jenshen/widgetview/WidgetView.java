@@ -30,8 +30,10 @@ import static com.jenshen.widgetview.entity.WidgetPosition.EMPTY;
 
 public class WidgetView extends FrameLayout {
 
-    private int pointHeight = 100;
-    private int pointWidth = 100;
+    private int pointHeight = 50;
+    private int pointWidth = 50;
+    private boolean dragAndDropByLongClick = true;
+    private int pointIcon = R.drawable.ic_point_angle;
     private boolean isDragMode;
     private boolean isPaddingValidated;
     private WidgetSwipeManager swipeManager;
@@ -74,7 +76,7 @@ public class WidgetView extends FrameLayout {
 
     @Override
     public boolean dispatchTouchEvent(MotionEvent ev) {
-        if (true) {
+        if (isEnabled()) {
             super.dispatchTouchEvent(ev);
             return swipeManager.onTouch(this, ev);
         }
@@ -102,6 +104,9 @@ public class WidgetView extends FrameLayout {
             try {
                 pointHeight = attributes.getDimensionPixelOffset(R.styleable.WidgetView_Params_widgetView_pointHeight, pointHeight);
                 pointWidth = attributes.getDimensionPixelOffset(R.styleable.WidgetView_Params_widgetView_pointWidth, pointWidth);
+                pointIcon = attributes.getResourceId(R.styleable.WidgetView_Params_widgetView_pointIcon, pointIcon);
+                dragAndDropByLongClick = attributes.getBoolean(R.styleable.WidgetContainerLayout_Params_widgetContainer_autoConnect_AvailabilityZone, dragAndDropByLongClick);
+
                 widgetPosition = new WidgetPosition(
                         //top left
                         attributes.getDimensionPixelOffset(R.styleable.WidgetView_Params_widgetView_corner_topLeft_columnLine, EMPTY),
@@ -125,12 +130,12 @@ public class WidgetView extends FrameLayout {
         if (widgetPosition == null) {
             widgetPosition = new WidgetPosition();
         }
-        swipeManager = new WidgetSwipeManager(pointWidth, pointHeight, widgetPosition);
+        swipeManager = new WidgetSwipeManager(getContext(), pointWidth, pointHeight, dragAndDropByLongClick, widgetPosition);
         paintPoints = new Paint();
         paintPoints.setStyle(Paint.Style.FILL);
         paintPoints.setColor(Color.GREEN);
         paintPoints.setStrokeWidth(5);
-        cornerBitmap = Bitmap.createScaledBitmap(getBitmap(getContext(), R.drawable.ic_point_angle), pointWidth, pointHeight, false);
+        cornerBitmap = Bitmap.createScaledBitmap(getBitmap(getContext(), pointIcon), pointWidth, pointHeight, false);
     }
 
     private void drawCornersPoints(Canvas canvas) {

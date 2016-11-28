@@ -15,6 +15,7 @@ import android.util.AttributeSet;
 import android.view.View;
 import android.widget.FrameLayout;
 
+import com.jenshen.awesomeanimation.AwesomeAnimation;
 import com.jenshen.widgetview.entity.Point;
 import com.jenshen.widgetview.entity.WidgetMotionInfo;
 import com.jenshen.widgetview.entity.WidgetPosition;
@@ -30,7 +31,7 @@ public class WidgetContainerLayout extends FrameLayout implements OnWidgetMoveUp
 
     private int columnCount = 4;
     private int rowCount = 4;
-    private int autoConnectOffset = 100;
+    private int autoConnectAvailabilityZone = 1000;
     private List<WidgetView> widgets;
     private List<Point> points;
     private Paint paintLines;
@@ -93,61 +94,26 @@ public class WidgetContainerLayout extends FrameLayout implements OnWidgetMoveUp
     @Override
     public void onMoveUp(View view, WidgetPosition widgetPosition, WidgetMotionInfo motionInfo) {
         Point leftTopCorner = getPointForCorner(motionInfo.getCurrentWidgetPositionX(), motionInfo.getCurrentWidgetPositionY());
-        if (leftTopCorner == null) {
-            setLastPosition(view, motionInfo);
-        }
         Point rightTopCorner = getPointForCorner(motionInfo.getCurrentWidgetPositionX() + motionInfo.getCurrentWidth(),
                 motionInfo.getCurrentWidgetPositionY());
-        if (rightTopCorner == null) {
-            setLastPosition(view, motionInfo);
-        }
         Point leftBottomCorner = getPointForCorner(motionInfo.getCurrentWidgetPositionX(),
                 motionInfo.getCurrentWidgetPositionY() + motionInfo.getCurrentHeight());
-        if (leftBottomCorner == null) {
-            setLastPosition(view, motionInfo);
-        }
         Point rightBottomCorner = getPointForCorner(motionInfo.getCurrentWidgetPositionX() + motionInfo.getCurrentWidth(),
                 motionInfo.getCurrentWidgetPositionY() + motionInfo.getCurrentHeight());
-        if (rightBottomCorner == null) {
+        if (leftTopCorner == null || rightTopCorner == null || leftBottomCorner == null || rightBottomCorner == null) {
             setLastPosition(view, motionInfo);
         } else {
-            setNewPosition(view, widgetPosition, leftTopCorner, rightTopCorner, leftBottomCorner, rightBottomCorner);
-        }
-    }
-
-    private void setLastPosition(View view, WidgetMotionInfo motionInfo) {
-
-    }
-
-    private void setNewPosition(View view, WidgetPosition widgetPosition,
-                                Point leftTopCorner, Point rightTopCorner,
-                                Point leftBottomCorner, Point rightBottomCorner) {
-
-    }
-
-    @Nullable
-    private Point getPointForCorner(final float x, final float y) {
-        Set<Point> pointsSet = new TreeSet<>(new Comparator<Point>() {
-            @Override
-            public int compare(Point point1, Point point2) {
-                float offsets1 = Math.abs(point1.getX() - x)+ Math.abs(point1.getY() - y);
-                float offsets2 = Math.abs(point2.getX() - x)+ Math.abs(point2.getY() - y);
-                if (offsets1 > offsets2) {
-                    return 1;
-                } else if (offsets1 < offsets2) {
-                    return -1;
-                } else {
-                    return 0;
-                }
-            }
-        });
-        for (Point point : points) {
-            if (point.getX() - autoConnectOffset <= x && point.getX() + autoConnectOffset >= x &&
-                    point.getY() - autoConnectOffset <= y && point.getY() + autoConnectOffset >= y) {
-                pointsSet.add(point);
+            if (leftTopCorner.getX() == leftBottomCorner.getX() &&
+                    rightTopCorner.getX() == rightBottomCorner.getX() &&
+                    leftTopCorner.getY() == rightTopCorner.getY() &&
+                    leftBottomCorner.getY() == rightBottomCorner.getY()) {
+                int width = rightTopCorner.getX() - leftTopCorner.getX();
+                int height = leftBottomCorner.getY() - leftTopCorner.getY();
+                setNewPosition(view, motionInfo, leftTopCorner.getX(), leftTopCorner.getY(), width, height);
+            } else {
+                throw new RuntimeException("Something went wrong");
             }
         }
-        return pointsSet.isEmpty() ? null : pointsSet.iterator().next();
     }
 
     private void init() {
@@ -168,6 +134,7 @@ public class WidgetContainerLayout extends FrameLayout implements OnWidgetMoveUp
             try {
                 columnCount = attributes.getDimensionPixelOffset(R.styleable.WidgetContainerLayout_Params_widgetContainer_columnCount, columnCount);
                 rowCount = attributes.getDimensionPixelOffset(R.styleable.WidgetContainerLayout_Params_widgetContainer_rowCount, rowCount);
+                autoConnectAvailabilityZone = attributes.getDimensionPixelOffset(R.styleable.WidgetContainerLayout_Params_widgetContainer_autoConnect_AvailabilityZone, autoConnectAvailabilityZone);
             } finally {
                 attributes.recycle();
             }
@@ -212,5 +179,54 @@ public class WidgetContainerLayout extends FrameLayout implements OnWidgetMoveUp
         for (Point point : points) {
             canvas.drawCircle(point.getX(), point.getY(), 10, paintPoints);
         }
+    }
+
+    @Nullable
+    private Point getPointForCorner(final float x, final float y) {
+        Set<Point> pointsSet = new TreeSet<>(new Comparator<Point>() {
+            @Override
+            public int compare(Point point1, Point point2) {
+                float offsets1 = Math.abs(point1.getX() - x) + Math.abs(point1.getY() - y);
+                float offsets2 = Math.abs(point2.getX() - x) + Math.abs(point2.getY() - y);
+                if (offsets1 > offsets2) {
+                    return 1;
+                } else if (offsets1 < offsets2) {
+                    return -1;
+                } else {
+                    return 0;
+                }
+            }
+        });
+        for (Point point : points) {
+            if (point.getX() - autoConnectAvailabilityZone <= x && point.getX() + autoConnectAvailabilityZone >= x &&
+                    point.getY() - autoConnectAvailabilityZone <= y && point.getY() + autoConnectAvailabilityZone >= y) {
+                pointsSet.add(point);
+            }
+        }
+        return pointsSet.isEmpty() ? null : pointsSet.iterator().next();
+    }
+
+    private void setLastPosition(View view, WidgetMotionInfo motionInfo) {
+        new AwesomeAnimation.Builder(view)
+                .setX(AwesomeAnimation.CoordinationMode.COORDINATES, motionInfo.getCurrentWidgetPositionX(), motionInfo.getLastWidgetPositionX())
+                .setY(AwesomeAnimation.CoordinationMode.COORDINATES, motionInfo.getCurrentWidgetPositionY(), motionInfo.getLastWidgetPositionY())
+                .setSizeX(AwesomeAnimation.SizeMode.SIZE, motionInfo.getCurrentWidth(), motionInfo.getLastWidth())
+                .setSizeY(AwesomeAnimation.SizeMode.SIZE, motionInfo.getCurrentHeight(), motionInfo.getLastHeight())
+                .setDuration(500)
+                .build()
+                .start();
+    }
+
+    private void setNewPosition(View view, WidgetMotionInfo motionInfo,
+                                int x, int y,
+                                int width, int height) {
+        new AwesomeAnimation.Builder(view)
+                .setX(AwesomeAnimation.CoordinationMode.COORDINATES, motionInfo.getCurrentWidgetPositionX(), x)
+                .setY(AwesomeAnimation.CoordinationMode.COORDINATES, motionInfo.getCurrentWidgetPositionY(), y)
+                .setSizeX(AwesomeAnimation.SizeMode.SIZE, motionInfo.getCurrentWidth(), width)
+                .setSizeY(AwesomeAnimation.SizeMode.SIZE, motionInfo.getCurrentHeight(), height)
+                .setDuration(500)
+                .build()
+                .start();
     }
 }

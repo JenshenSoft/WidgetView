@@ -4,6 +4,8 @@
     <declare-styleable name="WidgetView_Params">
         <attr name="widgetView_pointWidth" format="dimension" />
         <attr name="widgetView_pointHeight" format="dimension" />
+        <attr name="widgetView_pointIcon" format="reference" />
+        <attr name="widgetView_dragAndDrop_byLongClick" format="boolean" />
         <attr name="widgetView_corner_topLeft_columnLine" format="integer" />
         <attr name="widgetView_corner_topLeft_rowLine" format="integer" />
         <attr name="widgetView_corner_topRight_columnLine" format="integer" />
@@ -17,5 +19,6 @@
     <declare-styleable name="WidgetContainerLayout_Params">
         <attr name="widgetContainer_columnCount" format="integer" />
         <attr name="widgetContainer_rowCount" format="integer" />
+        <attr name="widgetContainer_autoConnect_AvailabilityZone" format="integer" />
     </declare-styleable>
 </resources>

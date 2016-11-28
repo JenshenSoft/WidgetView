@@ -9,8 +9,9 @@ public class WidgetMotionInfo {
     private final float lastWidgetPositionY;
     private final int lastWidth;
     private final int lastHeight;
+
     @WidgetSwipeManager.MotionType
-    private final int motionType;
+    private int motionType;
 
     private float currentWidgetPositionX;
     private float currentWidgetPositionY;
@@ -76,5 +77,9 @@ public class WidgetMotionInfo {
     @WidgetSwipeManager.MotionType
     public int getMotionType() {
         return motionType;
+    }
+
+    public void setMotionType(int motionType) {
+        this.motionType = motionType;
     }
 }
