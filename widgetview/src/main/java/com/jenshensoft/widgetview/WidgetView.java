@@ -1,4 +1,5 @@
-package com.jenshen.widgetview;
+package com.jenshensoft.widgetview;
+
 
 import android.annotation.TargetApi;
 import android.content.Context;
@@ -21,12 +22,11 @@ import android.util.AttributeSet;
 import android.view.MotionEvent;
 import android.widget.FrameLayout;
 
-import com.jenshen.widgetview.entity.WidgetPosition;
-import com.jenshen.widgetview.listener.OnWidgetMoveUpListener;
-import com.jenshen.widgetview.util.WidgetSwipeManager;
+import com.jenshensoft.widgetview.entity.WidgetPosition;
+import com.jenshensoft.widgetview.listener.OnWidgetMoveUpListener;
+import com.jenshensoft.widgetview.util.WidgetSwipeManager;
 
-import static com.jenshen.widgetview.entity.WidgetPosition.EMPTY;
-
+import static com.jenshensoft.widgetview.entity.WidgetPosition.EMPTY;
 
 public class WidgetView extends FrameLayout {
 

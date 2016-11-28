@@ -1,4 +1,5 @@
-package com.jenshen.widgetview;
+package com.jenshensoft.widgetview;
+
 
 import android.annotation.TargetApi;
 import android.content.Context;
@@ -16,10 +17,10 @@ import android.view.View;
 import android.widget.FrameLayout;
 
 import com.jenshen.awesomeanimation.AwesomeAnimation;
-import com.jenshen.widgetview.entity.Point;
-import com.jenshen.widgetview.entity.WidgetMotionInfo;
-import com.jenshen.widgetview.entity.WidgetPosition;
-import com.jenshen.widgetview.listener.OnWidgetMoveUpListener;
+import com.jenshensoft.widgetview.entity.Point;
+import com.jenshensoft.widgetview.entity.WidgetMotionInfo;
+import com.jenshensoft.widgetview.entity.WidgetPosition;
+import com.jenshensoft.widgetview.listener.OnWidgetMoveUpListener;
 
 import java.util.ArrayList;
 import java.util.Comparator;

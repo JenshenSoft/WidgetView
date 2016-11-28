@@ -1,4 +1,4 @@
-package com.jenshen.widgetview.entity;
+package com.jenshensoft.widgetview.entity;
 
 
 public class WidgetPosition {

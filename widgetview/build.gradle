@@ -9,7 +9,10 @@ def test = rootProject.ext.testingLibraries;
 
 def siteUrl = 'https://github.com/JenshenSoft/WidgetView'
 def gitUrl = 'https://github.com/JenshenSoft/WidgetView.git'
-def libDesc = 'Widgets android library'
+def libDesc = 'This library provides a widget layout.'
+
+group = "ua.jenshensoft"
+version = "0.5"
 
 allprojects {
     repositories {
@@ -70,7 +73,7 @@ install {
         pom {
             project {
                 packaging 'aar'
-                name "Widgets layout library"
+                name "WidgetView"
                 url siteUrl
                 licenses {
                     license {

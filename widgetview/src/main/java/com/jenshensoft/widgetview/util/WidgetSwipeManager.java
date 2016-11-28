@@ -1,4 +1,5 @@
-package com.jenshen.widgetview.util;
+package com.jenshensoft.widgetview.util;
+
 
 import android.content.Context;
 import android.support.annotation.IntDef;
@@ -8,18 +9,18 @@ import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 
-import com.jenshen.widgetview.entity.WidgetMotionInfo;
-import com.jenshen.widgetview.entity.WidgetPosition;
-import com.jenshen.widgetview.listener.OnWidgetMoveUpListener;
+import com.jenshensoft.widgetview.entity.WidgetMotionInfo;
+import com.jenshensoft.widgetview.entity.WidgetPosition;
+import com.jenshensoft.widgetview.listener.OnWidgetMoveUpListener;
 
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 
-import static com.jenshen.widgetview.util.WidgetSwipeManager.MotionType.LEFT_BOTTOM_ANGLE_MOTION;
-import static com.jenshen.widgetview.util.WidgetSwipeManager.MotionType.LEFT_TOP_ANGLE_MOTION;
-import static com.jenshen.widgetview.util.WidgetSwipeManager.MotionType.RIGHT_BOTTOM_ANGLE_MOTION;
-import static com.jenshen.widgetview.util.WidgetSwipeManager.MotionType.RIGHT_TOP_ANGLE_MOTION;
-import static com.jenshen.widgetview.util.WidgetSwipeManager.MotionType.WIDGET_MOTION;
+import static com.jenshensoft.widgetview.util.WidgetSwipeManager.MotionType.LEFT_BOTTOM_ANGLE_MOTION;
+import static com.jenshensoft.widgetview.util.WidgetSwipeManager.MotionType.LEFT_TOP_ANGLE_MOTION;
+import static com.jenshensoft.widgetview.util.WidgetSwipeManager.MotionType.RIGHT_BOTTOM_ANGLE_MOTION;
+import static com.jenshensoft.widgetview.util.WidgetSwipeManager.MotionType.RIGHT_TOP_ANGLE_MOTION;
+import static com.jenshensoft.widgetview.util.WidgetSwipeManager.MotionType.WIDGET_MOTION;
 
 public class WidgetSwipeManager implements View.OnTouchListener {
 

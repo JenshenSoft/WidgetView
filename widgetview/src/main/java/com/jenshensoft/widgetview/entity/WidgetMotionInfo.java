@@ -1,7 +1,7 @@
-package com.jenshen.widgetview.entity;
+package com.jenshensoft.widgetview.entity;
 
 
-import com.jenshen.widgetview.util.WidgetSwipeManager;
+import com.jenshensoft.widgetview.util.WidgetSwipeManager;
 
 public class WidgetMotionInfo {
 
