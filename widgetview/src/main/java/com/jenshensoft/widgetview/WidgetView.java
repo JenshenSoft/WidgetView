@@ -98,6 +98,10 @@ public class WidgetView extends FrameLayout {
         swipeManager.setOnWidgetMoveUpListener(onWidgetMoveUpListener);
     }
 
+    public WidgetPosition getWidgetPosition() {
+        return widgetPosition;
+    }
+
     private void initAttr(AttributeSet attrs) {
         if (attrs != null) {
             TypedArray attributes = getContext().obtainStyledAttributes(attrs, R.styleable.WidgetView_Params);
@@ -109,17 +113,17 @@ public class WidgetView extends FrameLayout {
 
                 widgetPosition = new WidgetPosition(
                         //top left
-                        attributes.getDimensionPixelOffset(R.styleable.WidgetView_Params_widgetView_corner_topLeft_columnLine, EMPTY),
-                        attributes.getDimensionPixelOffset(R.styleable.WidgetView_Params_widgetView_corner_topLeft_rowLine, EMPTY),
+                        attributes.getInt(R.styleable.WidgetView_Params_widgetView_corner_topLeft_columnLine, EMPTY),
+                        attributes.getInt(R.styleable.WidgetView_Params_widgetView_corner_topLeft_rowLine, EMPTY),
                         //top right
-                        attributes.getDimensionPixelOffset(R.styleable.WidgetView_Params_widgetView_corner_topRight_columnLine, EMPTY),
-                        attributes.getDimensionPixelOffset(R.styleable.WidgetView_Params_widgetView_corner_topRight_rowLine, EMPTY),
+                        attributes.getInt(R.styleable.WidgetView_Params_widgetView_corner_topRight_columnLine, EMPTY),
+                        attributes.getInt(R.styleable.WidgetView_Params_widgetView_corner_topRight_rowLine, EMPTY),
                         //bottom left
-                        attributes.getDimensionPixelOffset(R.styleable.WidgetView_Params_widgetView_corner_bottomLeft_columnLine, EMPTY),
-                        attributes.getDimensionPixelOffset(R.styleable.WidgetView_Params_widgetView_corner_bottomLeft_rowLine, EMPTY),
+                        attributes.getInt(R.styleable.WidgetView_Params_widgetView_corner_bottomLeft_columnLine, EMPTY),
+                        attributes.getInt(R.styleable.WidgetView_Params_widgetView_corner_bottomLeft_rowLine, EMPTY),
                         //bottom right
-                        attributes.getDimensionPixelOffset(R.styleable.WidgetView_Params_widgetView_corner_bottomRight_columnLine, EMPTY),
-                        attributes.getDimensionPixelOffset(R.styleable.WidgetView_Params_widgetView_corner_bottomRight_rowLine, EMPTY));
+                        attributes.getInt(R.styleable.WidgetView_Params_widgetView_corner_bottomRight_columnLine, EMPTY),
+                        attributes.getInt(R.styleable.WidgetView_Params_widgetView_corner_bottomRight_rowLine, EMPTY));
             } finally {
                 attributes.recycle();
             }

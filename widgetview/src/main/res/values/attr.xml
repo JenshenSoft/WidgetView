@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<resources>
+<resources xmlns:tools="http://schemas.android.com/tools">
 
     <declare-styleable name="WidgetView_Params">
         <attr name="widgetView_pointWidth" format="dimension" />
@@ -16,7 +16,7 @@
         <attr name="widgetView_corner_bottomRight_rowLine" format="integer" />
     </declare-styleable>
 
-    <declare-styleable name="WidgetContainerLayout_Params">
+    <declare-styleable name="WidgetContainerLayout_Params" tools:ignore="ResourceName">
         <attr name="widgetContainer_columnCount" format="integer" />
         <attr name="widgetContainer_rowCount" format="integer" />
         <attr name="widgetContainer_autoConnect_AvailabilityZone" format="integer" />
