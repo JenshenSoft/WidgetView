@@ -1,7 +1,10 @@
 package com.jenshensoft.widgetview.entity;
 
 
-public class WidgetPosition {
+import android.os.Parcel;
+import android.os.Parcelable;
+
+public class WidgetPosition implements Parcelable {
 
     public static final int EMPTY = -1;
     //top left
@@ -97,4 +100,44 @@ public class WidgetPosition {
     public void setBottomRightRowLine(int bottomRightRowLine) {
         this.bottomRightRowLine = bottomRightRowLine;
     }
+
+    @Override
+    public int describeContents() {
+        return 0;
+    }
+
+    @Override
+    public void writeToParcel(Parcel dest, int flags) {
+        dest.writeInt(this.topLeftColumnLine);
+        dest.writeInt(this.topLeftRowLine);
+        dest.writeInt(this.topRightColumnLine);
+        dest.writeInt(this.topRightRowLine);
+        dest.writeInt(this.bottomLeftColumnLine);
+        dest.writeInt(this.bottomLeftRowLine);
+        dest.writeInt(this.bottomRightColumnLine);
+        dest.writeInt(this.bottomRightRowLine);
+    }
+
+    protected WidgetPosition(Parcel in) {
+        this.topLeftColumnLine = in.readInt();
+        this.topLeftRowLine = in.readInt();
+        this.topRightColumnLine = in.readInt();
+        this.topRightRowLine = in.readInt();
+        this.bottomLeftColumnLine = in.readInt();
+        this.bottomLeftRowLine = in.readInt();
+        this.bottomRightColumnLine = in.readInt();
+        this.bottomRightRowLine = in.readInt();
+    }
+
+    public static final Parcelable.Creator<WidgetPosition> CREATOR = new Parcelable.Creator<WidgetPosition>() {
+        @Override
+        public WidgetPosition createFromParcel(Parcel source) {
+            return new WidgetPosition(source);
+        }
+
+        @Override
+        public WidgetPosition[] newArray(int size) {
+            return new WidgetPosition[size];
+        }
+    };
 }

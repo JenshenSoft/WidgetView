@@ -9,8 +9,8 @@ import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 
+import com.jenshensoft.widgetview.WidgetView;
 import com.jenshensoft.widgetview.entity.WidgetMotionInfo;
-import com.jenshensoft.widgetview.entity.WidgetPosition;
 import com.jenshensoft.widgetview.listener.OnWidgetMoveUpListener;
 
 import java.lang.annotation.Retention;
@@ -27,7 +27,6 @@ public class WidgetSwipeManager implements View.OnTouchListener {
     private final int pointWidth;
     private final int pointHeight;
     private final boolean dragAndDropByLongClick;
-    private final WidgetPosition widgetPosition;
     private final GestureDetector gestureDetector;
     private float lastXPosition;
     private float lastYPosition;
@@ -41,12 +40,10 @@ public class WidgetSwipeManager implements View.OnTouchListener {
     @Nullable
     private View view;
 
-    public WidgetSwipeManager(Context context, int pointWidth, int pointHeight,
-                              boolean dragAndDropByLongClick, WidgetPosition widgetPosition) {
+    public WidgetSwipeManager(Context context, int pointWidth, int pointHeight, boolean dragAndDropByLongClick) {
         this.pointWidth = pointWidth;
         this.pointHeight = pointHeight;
         this.dragAndDropByLongClick = dragAndDropByLongClick;
-        this.widgetPosition = widgetPosition;
         this.gestureDetector = new GestureDetector(context, new LongPressGestureDetector());
     }
 
@@ -115,10 +112,16 @@ public class WidgetSwipeManager implements View.OnTouchListener {
         }
     }
 
+    public boolean isInTouchMode() {
+        return motionAction == MotionEvent.ACTION_DOWN || motionAction == MotionEvent.ACTION_MOVE;
+    }
+
     private boolean actionDown(View view, ViewGroup.LayoutParams layoutParams, MotionEvent motionEvent) {
         motionAction =  MotionEvent.ACTION_DOWN;
         this.view = view;
-        gestureDetector.onTouchEvent(motionEvent);
+        if (dragAndDropByLongClick) {
+            gestureDetector.onTouchEvent(motionEvent);
+        }
         this.lastXPosition = motionEvent.getRawX();
         this.lastYPosition = motionEvent.getRawY();
         float widgetX = view.getX();
@@ -159,7 +162,7 @@ public class WidgetSwipeManager implements View.OnTouchListener {
             motionInfo.setCurrentWidgetPositionY(view.getY());
             motionInfo.setCurrentHeight(layoutParams.height);
             motionInfo.setCurrentWidth(layoutParams.width);
-            onWidgetMoveUpListener.onMoveUp(view, widgetPosition, motionInfo);
+            onWidgetMoveUpListener.onMoveUp((WidgetView) view, motionInfo);
         }
         this.motionAction =  MotionEvent.ACTION_UP;
         this.motionInfo = null;

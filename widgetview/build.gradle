@@ -12,7 +12,7 @@ def gitUrl = 'https://github.com/JenshenSoft/WidgetView.git'
 def libDesc = 'This library provides a widget layout.'
 
 group = "ua.jenshensoft"
-version = "0.5"
+version = "0.51"
 
 allprojects {
     repositories {

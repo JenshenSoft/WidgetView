@@ -1,6 +1,8 @@
 package com.jenshensoft.widgetview;
 
 
+import android.animation.Animator;
+import android.animation.AnimatorListenerAdapter;
 import android.annotation.TargetApi;
 import android.content.Context;
 import android.content.res.TypedArray;
@@ -34,10 +36,12 @@ public class WidgetContainerLayout extends FrameLayout implements OnWidgetMoveUp
     private int columnCount = 4;
     private int rowCount = 4;
     private int autoConnectAvailabilityZone = 1000;
+    private boolean connectOnlyEmptyPoints = false;
     private List<WidgetView> widgets;
     private List<Point> points;
     private Paint paintLines;
     private Paint paintPoints;
+    private boolean isOnAnimateWidget;
 
     public WidgetContainerLayout(@NonNull Context context) {
         super(context);
@@ -59,6 +63,7 @@ public class WidgetContainerLayout extends FrameLayout implements OnWidgetMoveUp
         init();
     }
 
+    @SuppressWarnings("unused")
     @TargetApi(Build.VERSION_CODES.LOLLIPOP)
     public WidgetContainerLayout(@NonNull Context context, @Nullable AttributeSet attrs, @AttrRes int defStyleAttr, @StyleRes int defStyleRes) {
         super(context, attrs, defStyleAttr, defStyleRes);
@@ -71,17 +76,24 @@ public class WidgetContainerLayout extends FrameLayout implements OnWidgetMoveUp
     @Override
     protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
         super.onMeasure(widthMeasureSpec, heightMeasureSpec);
+        if (isOnAnimateWidget) {
+            return;
+        }
         createPoints(getMeasuredWidth(), getMeasuredHeight());
         for (WidgetView widget : widgets) {
-            updateViewPosition(widget);
+            if (!widget.isInTouchMode()) {
+                updateViewPosition(widget);
+            }
         }
     }
 
     @Override
     protected void onDraw(Canvas canvas) {
         super.onDraw(canvas);
-        drawLines(canvas);
-        drawPoints(canvas);
+        if (isEnabled()) {
+            drawLines(canvas);
+            drawPoints(canvas);
+        }
     }
 
     @Override
@@ -97,7 +109,16 @@ public class WidgetContainerLayout extends FrameLayout implements OnWidgetMoveUp
     }
 
     @Override
-    public void onMoveUp(View view, WidgetPosition widgetPosition, WidgetMotionInfo motionInfo) {
+    public void setEnabled(boolean enabled) {
+        super.setEnabled(enabled);
+        for (WidgetView widget : widgets) {
+            widget.setEnabled(enabled);
+        }
+    }
+
+    @SuppressWarnings("ConstantConditions")
+    @Override
+    public void onMoveUp(WidgetView view, WidgetMotionInfo motionInfo) {
         Point leftTopCorner = getPointByCoordinates(motionInfo.getCurrentWidgetPositionX(), motionInfo.getCurrentWidgetPositionY());
         Point rightTopCorner = getPointByCoordinates(motionInfo.getCurrentWidgetPositionX() + motionInfo.getCurrentWidth(),
                 motionInfo.getCurrentWidgetPositionY());
@@ -105,13 +126,24 @@ public class WidgetContainerLayout extends FrameLayout implements OnWidgetMoveUp
                 motionInfo.getCurrentWidgetPositionY() + motionInfo.getCurrentHeight());
         Point rightBottomCorner = getPointByCoordinates(motionInfo.getCurrentWidgetPositionX() + motionInfo.getCurrentWidth(),
                 motionInfo.getCurrentWidgetPositionY() + motionInfo.getCurrentHeight());
-        if (leftTopCorner == null || rightTopCorner == null || leftBottomCorner == null || rightBottomCorner == null) {
+        if (!validateNewPosition(leftTopCorner, rightTopCorner, leftBottomCorner, rightBottomCorner)) {
             setLastPosition(view, motionInfo);
         } else {
             if (leftTopCorner.getX() == leftBottomCorner.getX() &&
                     rightTopCorner.getX() == rightBottomCorner.getX() &&
                     leftTopCorner.getY() == rightTopCorner.getY() &&
                     leftBottomCorner.getY() == rightBottomCorner.getY()) {
+
+                WidgetPosition widgetPosition = view.getWidgetPosition();
+                widgetPosition.setTopLeftColumnLine(leftTopCorner.getColumn());
+                widgetPosition.setTopLeftRowLine(leftTopCorner.getRow());
+                widgetPosition.setTopRightColumnLine(rightTopCorner.getColumn());
+                widgetPosition.setTopRightRowLine(rightTopCorner.getRow());
+                widgetPosition.setBottomLeftColumnLine(leftBottomCorner.getColumn());
+                widgetPosition.setBottomLeftRowLine(leftBottomCorner.getRow());
+                widgetPosition.setBottomRightColumnLine(rightBottomCorner.getColumn());
+                widgetPosition.setBottomRightRowLine(rightBottomCorner.getRow());
+
                 int width = rightTopCorner.getX() - leftTopCorner.getX();
                 int height = leftBottomCorner.getY() - leftTopCorner.getY();
                 setNewPosition(view, motionInfo, leftTopCorner.getX(), leftTopCorner.getY(), width, height);
@@ -137,8 +169,9 @@ public class WidgetContainerLayout extends FrameLayout implements OnWidgetMoveUp
         if (attrs != null) {
             TypedArray attributes = getContext().obtainStyledAttributes(attrs, R.styleable.WidgetContainerLayout_Params);
             try {
-                columnCount = attributes.getDimensionPixelOffset(R.styleable.WidgetContainerLayout_Params_widgetContainer_columnCount, columnCount);
-                rowCount = attributes.getDimensionPixelOffset(R.styleable.WidgetContainerLayout_Params_widgetContainer_rowCount, rowCount);
+                columnCount = attributes.getInt(R.styleable.WidgetContainerLayout_Params_widgetContainer_columnCount, columnCount);
+                rowCount = attributes.getInt(R.styleable.WidgetContainerLayout_Params_widgetContainer_rowCount, rowCount);
+                connectOnlyEmptyPoints = attributes.getBoolean(R.styleable.WidgetContainerLayout_Params_widgetContainer_connectOnlyEmptyPoints, connectOnlyEmptyPoints);
                 autoConnectAvailabilityZone = attributes.getDimensionPixelOffset(R.styleable.WidgetContainerLayout_Params_widgetContainer_autoConnect_AvailabilityZone, autoConnectAvailabilityZone);
             } finally {
                 attributes.recycle();
@@ -221,90 +254,71 @@ public class WidgetContainerLayout extends FrameLayout implements OnWidgetMoveUp
     }
 
     private void updateViewPosition(WidgetView view) {
-        WidgetPosition widgetPosition = view.getWidgetPosition();
         if (hasAnyIndexes(view)) {
-            if (!arePointsSet(view)) {
-                String errorMessage = "All pointers should be set. There are ";
-                if (widgetPosition.getTopLeftColumnLine() == WidgetPosition.EMPTY) {
-                    errorMessage += ", TopLeft column not set";
-                }
-                if (widgetPosition.getTopLeftRowLine() == WidgetPosition.EMPTY) {
-                    errorMessage += ", TopLeft row not set";
-                }
-                if (widgetPosition.getTopRightColumnLine() == WidgetPosition.EMPTY) {
-                    errorMessage += ", TopRight column not set";
-                }
-                if (widgetPosition.getTopRightRowLine() == WidgetPosition.EMPTY) {
-                    errorMessage += ", TopRight column not set";
-                }
-                if (widgetPosition.getBottomLeftColumnLine() == WidgetPosition.EMPTY) {
-                    errorMessage += ", TopLeft column not set";
-                }
-                if (widgetPosition.getBottomLeftRowLine() == WidgetPosition.EMPTY) {
-                    errorMessage += ", TopLeft row not set";
-                }
-                if (widgetPosition.getBottomRightColumnLine() == WidgetPosition.EMPTY) {
-                    errorMessage += ", TopRight column not set";
-                }
-                if (widgetPosition.getBottomRightRowLine() == WidgetPosition.EMPTY) {
-                    errorMessage += ", TopRight column not set";
-                }
-                errorMessage += ";";
-                throw new RuntimeException(errorMessage);
-            }
+            checkPointsSet(view);
+            checkOppositeLines(view);
+            checkSideLength(view);
         } else {
             return;
         }
+        WidgetPosition widgetPosition = view.getWidgetPosition();
 
-        if (widgetPosition.getTopLeftColumnLine() == widgetPosition.getBottomLeftColumnLine() &&
-                widgetPosition.getTopRightColumnLine() == widgetPosition.getBottomRightColumnLine() &&
-                widgetPosition.getTopLeftRowLine() == widgetPosition.getTopRightRowLine() &&
-                widgetPosition.getBottomLeftRowLine() == widgetPosition.getBottomRightRowLine()) {
+        Point topLeftPoint = getPointByColumnAndRow(widgetPosition.getTopLeftColumnLine(), widgetPosition.getTopLeftRowLine());
+        Point topRightPoint = getPointByColumnAndRow(widgetPosition.getTopRightColumnLine(), widgetPosition.getTopRightRowLine());
+        Point bottomLeftPoint = getPointByColumnAndRow(widgetPosition.getBottomLeftColumnLine(), widgetPosition.getBottomLeftRowLine());
+        Point bottomRightPoint = getPointByColumnAndRow(widgetPosition.getBottomRightColumnLine(), widgetPosition.getBottomRightRowLine());
 
-            Point topLeftPoint = getPointByColumnAndRow(widgetPosition.getTopLeftColumnLine(), widgetPosition.getTopLeftRowLine());
-            Point topRightPoint = getPointByColumnAndRow(widgetPosition.getTopRightColumnLine(), widgetPosition.getTopRightRowLine());
-            Point bottomLeftPoint = getPointByColumnAndRow(widgetPosition.getBottomLeftColumnLine(), widgetPosition.getBottomLeftRowLine());
+        topLeftPoint.setConnected(true);
+        topRightPoint.setConnected(true);
+        bottomLeftPoint.setConnected(true);
+        bottomRightPoint.setConnected(true);
 
-            int width = topRightPoint.getX() - topLeftPoint.getX();
-            int height = bottomLeftPoint.getY() - topLeftPoint.getY();
-            ViewGroup.LayoutParams layoutParams = view.getLayoutParams();
-            layoutParams.width = width;
-            layoutParams.height = height;
-            view.setLayoutParams(layoutParams);
-            view.setX(topLeftPoint.getX());
-            view.setY(topLeftPoint.getY());
-        } else {
-            throw new RuntimeException("Something went wrong, the widget should be a square, there are same rules for index lines " +
-                    "(TopLeft column line == BottomLeft column line, " +
-                    "(TopRight column line == BottomRight column line, " +
-                    "(TopLeft row line == TopRight row line, " +
-                    "(BottomLeft row line == BottomRight row line, " +
-                    ")");
-        }
+        int width = topRightPoint.getX() - topLeftPoint.getX();
+        int height = bottomLeftPoint.getY() - topLeftPoint.getY();
+        ViewGroup.LayoutParams layoutParams = view.getLayoutParams();
+        layoutParams.width = width;
+        layoutParams.height = height;
+        view.setLayoutParams(layoutParams);
+        view.setX(topLeftPoint.getX());
+        view.setY(topLeftPoint.getY());
     }
 
     private void setLastPosition(View view, WidgetMotionInfo motionInfo) {
-        new AwesomeAnimation.Builder(view)
+        isOnAnimateWidget = true;
+        AwesomeAnimation animation = new AwesomeAnimation.Builder(view)
                 .setX(AwesomeAnimation.CoordinationMode.COORDINATES, motionInfo.getCurrentWidgetPositionX(), motionInfo.getLastWidgetPositionX())
                 .setY(AwesomeAnimation.CoordinationMode.COORDINATES, motionInfo.getCurrentWidgetPositionY(), motionInfo.getLastWidgetPositionY())
                 .setSizeX(AwesomeAnimation.SizeMode.SIZE, motionInfo.getCurrentWidth(), motionInfo.getLastWidth())
                 .setSizeY(AwesomeAnimation.SizeMode.SIZE, motionInfo.getCurrentHeight(), motionInfo.getLastHeight())
                 .setDuration(500)
-                .build()
-                .start();
+                .build();
+        animation.getAnimatorSet().addListener(new AnimatorListenerAdapter() {
+            @Override
+            public void onAnimationEnd(Animator animation) {
+                isOnAnimateWidget = false;
+            }
+        });
+        animation.start();
     }
 
     private void setNewPosition(View view, WidgetMotionInfo motionInfo,
                                 int x, int y,
                                 int width, int height) {
-        new AwesomeAnimation.Builder(view)
+        isOnAnimateWidget = true;
+        AwesomeAnimation animation = new AwesomeAnimation.Builder(view)
                 .setX(AwesomeAnimation.CoordinationMode.COORDINATES, motionInfo.getCurrentWidgetPositionX(), x)
                 .setY(AwesomeAnimation.CoordinationMode.COORDINATES, motionInfo.getCurrentWidgetPositionY(), y)
                 .setSizeX(AwesomeAnimation.SizeMode.SIZE, motionInfo.getCurrentWidth(), width)
                 .setSizeY(AwesomeAnimation.SizeMode.SIZE, motionInfo.getCurrentHeight(), height)
                 .setDuration(500)
-                .build()
-                .start();
+                .build();
+        animation.getAnimatorSet().addListener(new AnimatorListenerAdapter() {
+            @Override
+            public void onAnimationEnd(Animator animation) {
+                isOnAnimateWidget = false;
+            }
+        });
+        animation.start();
     }
 
     private boolean hasAnyIndexes(WidgetView view) {
@@ -329,5 +343,85 @@ public class WidgetContainerLayout extends FrameLayout implements OnWidgetMoveUp
                 widgetPosition.getBottomLeftRowLine() != WidgetPosition.EMPTY &&
                 widgetPosition.getBottomRightColumnLine() != WidgetPosition.EMPTY &&
                 widgetPosition.getBottomRightRowLine() != WidgetPosition.EMPTY;
+    }
+
+    private void checkPointsSet(WidgetView view) {
+        if (!arePointsSet(view)) {
+            WidgetPosition widgetPosition = view.getWidgetPosition();
+            String errorMessage = "All pointers should be set. There are ";
+            if (widgetPosition.getTopLeftColumnLine() == WidgetPosition.EMPTY) {
+                errorMessage += ", TopLeft column not set";
+            }
+            if (widgetPosition.getTopLeftRowLine() == WidgetPosition.EMPTY) {
+                errorMessage += ", TopLeft row not set";
+            }
+            if (widgetPosition.getTopRightColumnLine() == WidgetPosition.EMPTY) {
+                errorMessage += ", TopRight column not set";
+            }
+            if (widgetPosition.getTopRightRowLine() == WidgetPosition.EMPTY) {
+                errorMessage += ", TopRight column not set";
+            }
+            if (widgetPosition.getBottomLeftColumnLine() == WidgetPosition.EMPTY) {
+                errorMessage += ", TopLeft column not set";
+            }
+            if (widgetPosition.getBottomLeftRowLine() == WidgetPosition.EMPTY) {
+                errorMessage += ", TopLeft row not set";
+            }
+            if (widgetPosition.getBottomRightColumnLine() == WidgetPosition.EMPTY) {
+                errorMessage += ", TopRight column not set";
+            }
+            if (widgetPosition.getBottomRightRowLine() == WidgetPosition.EMPTY) {
+                errorMessage += ", TopRight column not set";
+            }
+            errorMessage += ";";
+            throw new RuntimeException(errorMessage);
+        }
+    }
+
+    private void checkOppositeLines(WidgetView view) {
+        WidgetPosition widgetPosition = view.getWidgetPosition();
+        if (widgetPosition.getTopLeftColumnLine() != widgetPosition.getBottomLeftColumnLine() ||
+                widgetPosition.getTopRightColumnLine() != widgetPosition.getBottomRightColumnLine() ||
+                widgetPosition.getTopLeftRowLine() != widgetPosition.getTopRightRowLine() ||
+                widgetPosition.getBottomLeftRowLine() != widgetPosition.getBottomRightRowLine()) {
+            throw new RuntimeException("Something went wrong, the widget should be a square, there are same rules for index lines " +
+                    "(TopLeft column line == BottomLeft column line, " +
+                    "(TopRight column line == BottomRight column line, " +
+                    "(TopLeft row line == TopRight row line, " +
+                    "(BottomLeft row line == BottomRight row line, " +
+                    ")");
+        }
+    }
+
+    private void checkSideLength(WidgetView view) {
+        WidgetPosition widgetPosition = view.getWidgetPosition();
+        if (widgetPosition.getTopLeftColumnLine() == widgetPosition.getTopRightColumnLine() ||
+                widgetPosition.getBottomLeftColumnLine() == widgetPosition.getBottomRightColumnLine() ||
+                widgetPosition.getTopLeftRowLine() == widgetPosition.getBottomLeftRowLine() ||
+                widgetPosition.getTopRightRowLine() == widgetPosition.getBottomRightRowLine()) {
+            throw new RuntimeException("Something went wrong, the widget sides can't be 0, there are same rules for index lines " +
+                    "(TopLeft column line == TopRight column line, " +
+                    "(BottomLeft column line == BottomRight column line, " +
+                    "(TopLeft row line == BottomLeft row line, " +
+                    "(TopRight row line == BottomRight row line)");
+        }
+    }
+
+    @SuppressWarnings("RedundantIfStatement")
+    private boolean validateNewPosition(Point leftTopCorner, Point rightTopCorner, Point leftBottomCorner, Point rightBottomCorner) {
+        if (leftTopCorner == null || rightTopCorner == null || leftBottomCorner == null || rightBottomCorner == null) {
+            return false;
+        }
+        if (leftTopCorner.getColumn() == rightTopCorner.getColumn() ||
+                leftBottomCorner.getColumn() == rightBottomCorner.getColumn() ||
+                leftTopCorner.getRow() == leftBottomCorner.getRow() ||
+                rightTopCorner.getRow() == rightBottomCorner.getRow()) {
+            return false;
+        }
+        if (connectOnlyEmptyPoints && (leftTopCorner.isConnected() || rightTopCorner.isConnected() ||
+                leftBottomCorner.isConnected() || rightBottomCorner.isConnected())) {
+            return false;
+        }
+        return true;
     }
 }

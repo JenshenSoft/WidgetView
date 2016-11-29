@@ -12,6 +12,8 @@ import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
 import android.graphics.drawable.VectorDrawable;
 import android.os.Build;
+import android.os.Parcel;
+import android.os.Parcelable;
 import android.support.annotation.AttrRes;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
@@ -32,9 +34,9 @@ public class WidgetView extends FrameLayout {
 
     private int pointHeight = 50;
     private int pointWidth = 50;
+    private int borderOffset = 25;
     private boolean dragAndDropByLongClick = true;
     private int pointIcon = R.drawable.ic_point_angle;
-    private boolean isDragMode;
     private boolean isPaddingValidated;
     private WidgetSwipeManager swipeManager;
     private Paint paintPoints;
@@ -65,6 +67,7 @@ public class WidgetView extends FrameLayout {
         init();
     }
 
+    @SuppressWarnings("unused")
     @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
     public WidgetView(@NonNull Context context, @Nullable AttributeSet attrs, @AttrRes int defStyleAttr, @StyleRes int defStyleRes) {
         super(context, attrs, defStyleAttr, defStyleRes);
@@ -72,6 +75,41 @@ public class WidgetView extends FrameLayout {
             initAttr(attrs);
         }
         init();
+    }
+
+    @Override
+    public boolean isEnabled() {
+        return super.isEnabled();
+
+    }
+
+    @Override
+    public Parcelable onSaveInstanceState() {
+        Parcelable superState = super.onSaveInstanceState();
+        SavedState savedState = new SavedState(superState);
+        savedState.widgetPosition = widgetPosition;
+        return savedState;
+    }
+
+    @Override
+    public void onRestoreInstanceState(Parcelable state) {
+        if (!(state instanceof SavedState)) {
+            super.onRestoreInstanceState(state);
+            return;
+        }
+
+        SavedState ss = (SavedState) state;
+        super.onRestoreInstanceState(ss.getSuperState());
+        this.widgetPosition = ss.widgetPosition;
+    }
+
+    @Override
+    protected void onSizeChanged(int w, int h, int oldw, int oldh) {
+        super.onSizeChanged(w, h, oldw, oldh);
+        if (isEnabled() &&!isPaddingValidated) {
+            setPadding(getPaddingLeft() + borderOffset, getPaddingTop() + borderOffset, getPaddingRight() + borderOffset, getPaddingBottom() + borderOffset);
+            isPaddingValidated = true;
+        }
     }
 
     @Override
@@ -84,14 +122,15 @@ public class WidgetView extends FrameLayout {
     }
 
     @Override
-    protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
-        super.onMeasure(widthMeasureSpec, heightMeasureSpec);
-    }
-
-    @Override
     protected void dispatchDraw(Canvas canvas) {
         super.dispatchDraw(canvas);
-        drawCornersPoints(canvas);
+        if (isEnabled()) {
+            drawCornersPoints(canvas);
+        }
+    }
+
+    public boolean isInTouchMode() {
+        return swipeManager.isInTouchMode();
     }
 
     public void setOnWidgetMoveUpListener(@Nullable OnWidgetMoveUpListener onWidgetMoveUpListener) {
@@ -108,8 +147,9 @@ public class WidgetView extends FrameLayout {
             try {
                 pointHeight = attributes.getDimensionPixelOffset(R.styleable.WidgetView_Params_widgetView_pointHeight, pointHeight);
                 pointWidth = attributes.getDimensionPixelOffset(R.styleable.WidgetView_Params_widgetView_pointWidth, pointWidth);
+                borderOffset = attributes.getDimensionPixelOffset(R.styleable.WidgetView_Params_widgetView_borderOffset, borderOffset);
                 pointIcon = attributes.getResourceId(R.styleable.WidgetView_Params_widgetView_pointIcon, pointIcon);
-                dragAndDropByLongClick = attributes.getBoolean(R.styleable.WidgetContainerLayout_Params_widgetContainer_autoConnect_AvailabilityZone, dragAndDropByLongClick);
+                dragAndDropByLongClick = attributes.getBoolean(R.styleable.WidgetView_Params_widgetView_dragAndDrop_byLongClick, dragAndDropByLongClick);
 
                 widgetPosition = new WidgetPosition(
                         //top left
@@ -134,7 +174,27 @@ public class WidgetView extends FrameLayout {
         if (widgetPosition == null) {
             widgetPosition = new WidgetPosition();
         }
-        swipeManager = new WidgetSwipeManager(getContext(), pointWidth, pointHeight, dragAndDropByLongClick, widgetPosition);
+        setSaveEnabled(true);
+        if (getId() == -1) {
+            if (widgetPosition.getTopLeftColumnLine() != EMPTY &&
+                    widgetPosition.getTopLeftRowLine() != EMPTY &&
+                    widgetPosition.getTopRightColumnLine() != EMPTY &&
+                    widgetPosition.getTopRightRowLine() != EMPTY &&
+                    widgetPosition.getBottomLeftColumnLine() != EMPTY &&
+                    widgetPosition.getBottomLeftRowLine() != EMPTY &&
+                    widgetPosition.getBottomRightColumnLine() != EMPTY &&
+                    widgetPosition.getBottomRightRowLine() != EMPTY) {
+                String number = widgetPosition.getTopLeftColumnLine() + "" +
+                        widgetPosition.getTopLeftRowLine() + "" +
+                        widgetPosition.getTopRightColumnLine() + "" +
+                        widgetPosition.getBottomLeftColumnLine() + "" + widgetPosition.getTopLeftColumnLine() + "" +
+                        widgetPosition.getBottomLeftRowLine() + "" +
+                        widgetPosition.getBottomRightColumnLine() + "" +
+                        widgetPosition.getBottomRightRowLine();
+                setId(Integer.valueOf(number));
+            }
+        }
+        swipeManager = new WidgetSwipeManager(getContext(), pointWidth, pointHeight, dragAndDropByLongClick);
         paintPoints = new Paint();
         paintPoints.setStyle(Paint.Style.FILL);
         paintPoints.setColor(Color.GREEN);
@@ -168,5 +228,38 @@ public class WidgetView extends FrameLayout {
         vectorDrawable.setBounds(0, 0, canvas.getWidth(), canvas.getHeight());
         vectorDrawable.draw(canvas);
         return bitmap;
+    }
+
+    /* inner types */
+
+    private static class SavedState extends BaseSavedState {
+
+        public static final Parcelable.Creator<SavedState> CREATOR =
+                new Parcelable.Creator<SavedState>() {
+                    public SavedState createFromParcel(Parcel in) {
+                        return new SavedState(in);
+                    }
+
+                    public SavedState[] newArray(int size) {
+                        return new SavedState[size];
+                    }
+                };
+
+        WidgetPosition widgetPosition;
+
+        SavedState(Parcelable superState) {
+            super(superState);
+        }
+
+        private SavedState(Parcel in) {
+            super(in);
+            this.widgetPosition = in.readParcelable(WidgetPosition.class.getClassLoader());
+        }
+
+        @Override
+        public void writeToParcel(Parcel out, int flags) {
+            super.writeToParcel(out, flags);
+            out.writeParcelable(widgetPosition, flags);
+        }
     }
 }

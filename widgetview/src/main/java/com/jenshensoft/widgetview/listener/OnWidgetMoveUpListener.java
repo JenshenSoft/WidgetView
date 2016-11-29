@@ -1,12 +1,10 @@
 package com.jenshensoft.widgetview.listener;
 
 
-import android.view.View;
-
+import com.jenshensoft.widgetview.WidgetView;
 import com.jenshensoft.widgetview.entity.WidgetMotionInfo;
-import com.jenshensoft.widgetview.entity.WidgetPosition;
 
 public interface OnWidgetMoveUpListener {
 
-    void onMoveUp(View view, WidgetPosition widgetPosition, WidgetMotionInfo motionInfo);
+    void onMoveUp(WidgetView view, WidgetMotionInfo motionInfo);
 }

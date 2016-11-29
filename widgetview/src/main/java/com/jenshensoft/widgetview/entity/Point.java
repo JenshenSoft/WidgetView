@@ -5,6 +5,7 @@ public class Point {
     private int y;
     private int column;
     private int row;
+    private boolean isConnected;
 
     public Point(int x, int y, int column, int row) {
         this.x = x;
@@ -27,5 +28,13 @@ public class Point {
 
     public int getRow() {
         return row;
+    }
+
+    public boolean isConnected() {
+        return isConnected;
+    }
+
+    public void setConnected(boolean connected) {
+        isConnected = connected;
     }
 }
