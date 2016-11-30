@@ -104,7 +104,8 @@ public class WidgetContainerLayout extends FrameLayout implements OnWidgetMoveUp
             widgetView.setOnWidgetMoveUpListener(this);
             widgets.add(widgetView);
         } else {
-            throw new RuntimeException("Child of this container mast be WidgetView not a " + child.getClass().getSimpleName());
+            ((ViewGroup) child.getParent()).removeView(child);
+            addWidget(child);
         }
     }
 
@@ -152,6 +153,14 @@ public class WidgetContainerLayout extends FrameLayout implements OnWidgetMoveUp
             }
         }
     }
+
+    public void addWidget(View view) {
+        WidgetView widgetView = createWidgetView(view);
+        this.addView(widgetView);
+    }
+
+
+    /* private methods */
 
     private void init() {
         points = new ArrayList<>();
@@ -217,6 +226,14 @@ public class WidgetContainerLayout extends FrameLayout implements OnWidgetMoveUp
         for (Point point : points) {
             canvas.drawCircle(point.getX(), point.getY(), 10, paintPoints);
         }
+    }
+
+    private WidgetView createWidgetView(View view) {
+        WidgetView widgetView = new WidgetView(getContext());
+        LayoutParams layoutParams = new LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+        widgetView.setLayoutParams(layoutParams);
+        widgetView.addView(view);
+        return widgetView;
     }
 
     @Nullable

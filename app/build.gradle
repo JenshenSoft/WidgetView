@@ -1,16 +1,23 @@
 apply plugin: 'com.android.application'
 
+def cfg = rootProject.ext.configuration
+def libs = rootProject.ext.libraries;
+def testLibs = rootProject.ext.testingLibraries;
+
 android {
-    compileSdkVersion 25
-    buildToolsVersion "25.0.0"
+
+    compileSdkVersion cfg.compileSdkVersion
+    buildToolsVersion cfg.buildToolsVersion
+
     defaultConfig {
         applicationId "com.jenshen.widgetview"
-        minSdkVersion 15
-        targetSdkVersion 25
-        versionCode 1
-        versionName "1.0"
+        minSdkVersion cfg.minSdkVersion
+        targetSdkVersion cfg.targetSdkVersion
+        versionCode cfg.versionCode
+        versionName cfg.versionName
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
     }
+
     buildTypes {
         release {
             minifyEnabled false
@@ -25,7 +32,11 @@ dependencies {
         exclude group: 'com.android.support', module: 'support-annotations'
     })
     compile project(':widgetview')
-    compile 'com.android.support:appcompat-v7:25.0.1'
+
+    //support
+    compile "com.android.support:appcompat-v7:${libs.supportVersion}"
     compile 'com.android.support.constraint:constraint-layout:1.0.0-beta4'
-    testCompile 'junit:junit:4.12'
+
+    //testing
+    testCompile "junit:junit:${testLibs.junit}"
 }
