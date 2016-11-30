@@ -14,7 +14,7 @@
         app:widgetContainer_columnCount="7"
         app:widgetContainer_rowCount="7">
 
-        <com.jenshensoft.widgetview.WidgetView
+        <!--<com.jenshensoft.widgetview.WidgetView
             android:layout_width="140dp"
             android:layout_height="140dp"
             app:widgetView_dragAndDrop_byLongClick="false"
@@ -25,7 +25,7 @@
                   android:layout_height="match_parent"
                   android:background="@color/colorAccent" />
 
-        </com.jenshensoft.widgetview.WidgetView>
+        </com.jenshensoft.widgetview.WidgetView>-->
 
         <com.jenshensoft.widgetview.WidgetView
             android:layout_width="0dp"

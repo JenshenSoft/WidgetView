@@ -8,6 +8,7 @@ import android.view.GestureDetector;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.FrameLayout;
 
 import com.jenshensoft.widgetview.WidgetView;
 import com.jenshensoft.widgetview.entity.WidgetMotionInfo;
@@ -55,7 +56,7 @@ public class WidgetSwipeManager implements View.OnTouchListener {
     public boolean onTouch(final View view, MotionEvent motionEvent) {
         final float x = motionEvent.getRawX();
         final float y = motionEvent.getRawY();
-        final ViewGroup.LayoutParams layoutParams = view.getLayoutParams();
+        final FrameLayout.LayoutParams layoutParams = (FrameLayout.LayoutParams) view.getLayoutParams();
         final float shiftX = x - lastXPosition;
         final float shiftY = y - lastYPosition;
 
@@ -168,6 +169,7 @@ public class WidgetSwipeManager implements View.OnTouchListener {
     }
 
     private void actionUp(View view) {
+        this.motionAction =  MotionEvent.ACTION_UP;
         if (onWidgetMotionListener != null && motionInfo != null) {
             motionInfo.setCurrentWidgetPositionX(view.getX());
             motionInfo.setCurrentWidgetPositionY(view.getY());
@@ -175,9 +177,8 @@ public class WidgetSwipeManager implements View.OnTouchListener {
             motionInfo.setCurrentHeight(view.getMeasuredHeight());
             onWidgetMotionListener.onActionUp((WidgetView) view, motionInfo);
         }
-        this.motionAction =  MotionEvent.ACTION_UP;
-        this.motionInfo = null;
         this.view = null;
+        this.motionInfo = null;
     }
 
     @IntDef({LEFT_TOP_ANGLE_MOTION, RIGHT_TOP_ANGLE_MOTION, LEFT_BOTTOM_ANGLE_MOTION, RIGHT_BOTTOM_ANGLE_MOTION, WIDGET_MOTION})

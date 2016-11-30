@@ -1,24 +1,24 @@
 package com.jenshensoft.widgetview.entity;
 
 public class Point {
-    private int x;
-    private int y;
+    private float x;
+    private float y;
     private int column;
     private int row;
     private boolean isConnected;
 
-    public Point(int x, int y, int column, int row) {
+    public Point(float x, float y, int column, int row) {
         this.x = x;
         this.y = y;
         this.column = column;
         this.row = row;
     }
 
-    public int getX() {
+    public float getX() {
         return x;
     }
 
-    public int getY() {
+    public float getY() {
         return y;
     }
 

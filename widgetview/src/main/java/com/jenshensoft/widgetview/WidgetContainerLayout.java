@@ -6,12 +6,12 @@ import android.animation.AnimatorListenerAdapter;
 import android.annotation.TargetApi;
 import android.content.Context;
 import android.content.res.TypedArray;
-import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
 import android.os.Build;
 import android.support.annotation.AttrRes;
+import android.support.annotation.IntDef;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.annotation.StyleRes;
@@ -20,6 +20,7 @@ import android.util.Log;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.FrameLayout;
+import android.widget.ImageView;
 
 import com.jenshen.awesomeanimation.AwesomeAnimation;
 import com.jenshensoft.widgetview.entity.Point;
@@ -28,21 +29,32 @@ import com.jenshensoft.widgetview.entity.WidgetPosition;
 import com.jenshensoft.widgetview.listener.OnWidgetMotionListener;
 import com.jenshensoft.widgetview.util.BitmapUtil;
 
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Set;
 import java.util.TreeSet;
 
+import static com.jenshensoft.widgetview.WidgetContainerLayout.DeletePanelGravity.BOTTOM;
+import static com.jenshensoft.widgetview.WidgetContainerLayout.DeletePanelGravity.LEFT;
+import static com.jenshensoft.widgetview.WidgetContainerLayout.DeletePanelGravity.RIGHT;
+import static com.jenshensoft.widgetview.WidgetContainerLayout.DeletePanelGravity.TOP;
+
 public class WidgetContainerLayout extends FrameLayout implements OnWidgetMotionListener {
 
     private int columnCount = 4;
     private int rowCount = 4;
     private int autoConnectAvailabilityZone = 1000;
+    @DeletePanelGravity
+    private int deletePanelGravity = BOTTOM;
+    private int deletePanelLength = 200;
     private boolean connectOnlyEmptyPoints = false;
     private boolean enableTrash = true;
     private int trashIcon = R.drawable.ic_delete;
     private int trashAvailabilityZone = 100;
+    private ImageView deleteView;
     private List<WidgetView> widgets;
     private List<Point> points;
     private Paint paintLines;
@@ -91,13 +103,30 @@ public class WidgetContainerLayout extends FrameLayout implements OnWidgetMotion
                 updateViewPosition(widget);
             }
         }
-    }
 
-    @Override
-    public void draw(Canvas canvas) {
-        super.draw(canvas);
-
-        Log.e("TAG", "draw");
+        if (enableTrash) {
+            deleteView.setVisibility(VISIBLE);
+            switch (deletePanelGravity) {
+                case DeletePanelGravity.TOP:
+                    deleteView.setX(getMeasuredWidth() / 2 - deleteView.getMeasuredWidth() / 2);
+                    deleteView.setY(deletePanelLength / 2 - deleteView.getMeasuredHeight() / 2);
+                    break;
+                case DeletePanelGravity.BOTTOM:
+                    deleteView.setX(getMeasuredWidth() / 2 - deleteView.getMeasuredWidth() / 2);
+                    deleteView.setY(getMeasuredHeight() - (deletePanelLength / 2) - deleteView.getMeasuredHeight() / 2);
+                    break;
+                case DeletePanelGravity.LEFT:
+                    deleteView.setX(deletePanelLength / 2 - deleteView.getMeasuredWidth() / 2);
+                    deleteView.setY(getMeasuredHeight() / 2 - deleteView.getMeasuredHeight() / 2);
+                    break;
+                case DeletePanelGravity.RIGHT:
+                    deleteView.setX(getMeasuredWidth() - (deletePanelLength / 2) - deleteView.getMeasuredWidth() / 2);
+                    deleteView.setY(getMeasuredHeight() / 2 - deleteView.getMeasuredHeight() / 2);
+                    break;
+            }
+        } else {
+            deleteView.setVisibility(GONE);
+        }
     }
 
     @Override
@@ -106,9 +135,6 @@ public class WidgetContainerLayout extends FrameLayout implements OnWidgetMotion
         if (isEnabled()) {
             drawLines(canvas);
             drawPoints(canvas);
-            if (enableTrash) {
-                drawTrash(canvas);
-            }
         }
     }
 
@@ -119,7 +145,7 @@ public class WidgetContainerLayout extends FrameLayout implements OnWidgetMotion
             WidgetView widgetView = (WidgetView) child;
             widgetView.setOnWidgetMoveUpListener(this);
             widgets.add(widgetView);
-        } else {
+        } else if (deleteView != child) {
             ((ViewGroup) child.getParent()).removeView(child);
             addWidget(child);
         }
@@ -135,24 +161,27 @@ public class WidgetContainerLayout extends FrameLayout implements OnWidgetMotion
 
     @Override
     public void onActionDown(WidgetView view, WidgetMotionInfo motionInfo) {
-        inDeleteZone = false;
     }
-
-    boolean inDeleteZone;
 
     @Override
     public void onActionMove(WidgetView view, WidgetMotionInfo motionInfo) {
-        float deleteX = 0;
-        float deleteY = 0;
+        float deleteX = deleteView.getX();
+        float deleteY = deleteView.getY();
         float widgetPositionX = motionInfo.getCurrentWidgetPositionX();
         float widgetPositionY = motionInfo.getCurrentWidgetPositionY();
         if (deleteX - trashAvailabilityZone <= widgetPositionX && deleteX + trashAvailabilityZone >= widgetPositionX &&
                 deleteY - trashAvailabilityZone <= widgetPositionY && deleteY + trashAvailabilityZone >= widgetPositionY) {
-
-            inDeleteZone = true;
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN) {
+                deleteView.setImageAlpha(255);
+            } else {
+                deleteView.setAlpha(1f);
+            }
         } else {
-
-            inDeleteZone = false;
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN) {
+                deleteView.setImageAlpha(150);
+            } else {
+                deleteView.setAlpha(0.7f);
+            }
         }
         invalidate();
         Log.e("TAG", "onActionMove");
@@ -161,7 +190,6 @@ public class WidgetContainerLayout extends FrameLayout implements OnWidgetMotion
     @SuppressWarnings("ConstantConditions")
     @Override
     public void onActionUp(WidgetView view, WidgetMotionInfo motionInfo) {
-        inDeleteZone = false;
         Point leftTopCorner = getPointByCoordinates(motionInfo.getCurrentWidgetPositionX(), motionInfo.getCurrentWidgetPositionY());
         Point rightTopCorner = getPointByCoordinates(motionInfo.getCurrentWidgetPositionX() + motionInfo.getCurrentWidth(),
                 motionInfo.getCurrentWidgetPositionY());
@@ -187,8 +215,8 @@ public class WidgetContainerLayout extends FrameLayout implements OnWidgetMotion
                 widgetPosition.setBottomRightColumnLine(rightBottomCorner.getColumn());
                 widgetPosition.setBottomRightRowLine(rightBottomCorner.getRow());
 
-                int width = rightTopCorner.getX() - leftTopCorner.getX();
-                int height = leftBottomCorner.getY() - leftTopCorner.getY();
+                int width = Math.round(rightTopCorner.getX() - leftTopCorner.getX());
+                int height = Math.round(leftBottomCorner.getY() - leftTopCorner.getY());
                 setNewPosition(view, motionInfo, leftTopCorner.getX(), leftTopCorner.getY(), width, height);
             } else {
                 throw new RuntimeException("Something went wrong");
@@ -214,8 +242,17 @@ public class WidgetContainerLayout extends FrameLayout implements OnWidgetMotion
         paintPoints.setColor(Color.GREEN);
         paintPoints.setStrokeWidth(5);
         setWillNotDraw(false);
+        createDeleteView();
     }
 
+    private void createDeleteView() {
+        deleteView = new ImageView(getContext());
+        deleteView.setLayoutParams(new FrameLayout.LayoutParams(FrameLayout.LayoutParams.WRAP_CONTENT, FrameLayout.LayoutParams.WRAP_CONTENT));
+        deleteView.setImageBitmap(BitmapUtil.getBitmap(getContext(), trashIcon));
+        addView(deleteView, 0);
+    }
+
+    @SuppressWarnings("WrongConstant")
     private void initAttr(AttributeSet attrs) {
         if (attrs != null) {
             TypedArray attributes = getContext().obtainStyledAttributes(attrs, R.styleable.WidgetContainerLayout_Params);
@@ -225,6 +262,7 @@ public class WidgetContainerLayout extends FrameLayout implements OnWidgetMotion
                 connectOnlyEmptyPoints = attributes.getBoolean(R.styleable.WidgetContainerLayout_Params_widgetContainer_connectOnlyEmptyPoints, connectOnlyEmptyPoints);
                 enableTrash = attributes.getBoolean(R.styleable.WidgetContainerLayout_Params_widgetContainer_enableTrash, enableTrash);
                 trashIcon = attributes.getResourceId(R.styleable.WidgetContainerLayout_Params_widgetContainer_trashIcon, trashIcon);
+                deletePanelGravity = attributes.getInt(R.styleable.WidgetContainerLayout_Params_widgetContainer_deletePanelGravity, deletePanelGravity);
                 autoConnectAvailabilityZone = attributes.getDimensionPixelOffset(R.styleable.WidgetContainerLayout_Params_widgetContainer_autoConnect_AvailabilityZone, autoConnectAvailabilityZone);
             } finally {
                 attributes.recycle();
@@ -233,36 +271,43 @@ public class WidgetContainerLayout extends FrameLayout implements OnWidgetMotion
     }
 
     private void createPoints(int width, int height) {
-        if (!points.isEmpty()) {
-            points.clear();
-        }
-        int columnWidth = width / columnCount;
-        int rowHeight = height / rowCount;
-        int currentX = 0;
-        int currentY = 0;
+        points.clear();
+        float currentX = validateStartX(0);
+        float currentY = validateStartY(0);
+        width = (int) validateWidth(width);
+        height = (int) validateHeight(height);
+
+        float columnWidth = width / columnCount;
+        float rowHeight = height / rowCount;
         for (int column = 0; column <= rowCount; column++) {
             for (int row = 0; row <= columnCount; row++) {
                 points.add(new Point(currentX, currentY, column, row));
                 currentY += rowHeight;
             }
             currentX += columnWidth;
-            currentY = 0;
+            currentY = validateStartY(0);
         }
     }
 
     private void drawLines(Canvas canvas) {
-        int columnWidth = canvas.getWidth() / columnCount;
-        int rowHeight = canvas.getHeight() / rowCount;
-        float currentX = 0;
-        float currentY = 0;
-        for (int column = 0; column <= rowCount; column++) {
-            canvas.drawLine(currentX, 0, currentX, canvas.getHeight(), paintLines);
-            currentX += columnWidth;
-        }
+        float currentX = validateStartX(0);
+        float currentY = validateStartY(0);
+        int width = (int) validateWidth(canvas.getWidth());
+        int height = (int) validateHeight(canvas.getHeight());
 
-        for (int row = 0; row <= columnCount; row++) {
-            canvas.drawLine(0, currentY, canvas.getWidth(), currentY, paintLines);
-            currentY += rowHeight;
+        int columnWidth = width / columnCount;
+        int rowHeight = height / rowCount;
+
+        float startX = validateStartX(0);
+        float startY = validateStartY(0);
+        for (int column = 0; column <= rowCount; column++) {
+            for (int row = 0; row <= columnCount; row++) {
+                canvas.drawLine(startX, currentY, startX + width, currentY, paintLines);
+                currentY += rowHeight;
+            }
+            canvas.drawLine(currentX, startY, currentX, startY + height, paintLines);
+            currentX += columnWidth;
+            currentY = startY;
         }
     }
 
@@ -272,24 +317,44 @@ public class WidgetContainerLayout extends FrameLayout implements OnWidgetMotion
         }
     }
 
-    private void drawTrash(Canvas canvas) {
-        Bitmap deleteBitmap;
-        if (inDeleteZone) {
-            Log.e("TAG", "IN Zone");
-            deleteBitmap = Bitmap.createScaledBitmap(BitmapUtil.getBitmap(getContext(), trashIcon), 200, 200, false);
-        } else {
-            Log.e("TAG", "OUT Zone");
-            deleteBitmap = Bitmap.createScaledBitmap(BitmapUtil.getBitmap(getContext(), trashIcon), 100, 100, false);
-        }
-        canvas.drawBitmap(deleteBitmap, 0, 0, paintPoints);
-    }
-
     private WidgetView createWidgetView(View view) {
         WidgetView widgetView = new WidgetView(getContext());
-        LayoutParams layoutParams = new LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+        FrameLayout.LayoutParams layoutParams = new FrameLayout.LayoutParams(FrameLayout.LayoutParams.WRAP_CONTENT, FrameLayout.LayoutParams.WRAP_CONTENT);
         widgetView.setLayoutParams(layoutParams);
         widgetView.addView(view);
         return widgetView;
+    }
+
+    private float validateWidth(float width) {
+        if (deletePanelGravity == LEFT || deletePanelGravity == RIGHT) {
+            return width - deletePanelLength;
+        } else {
+            return width;
+        }
+    }
+
+    private float validateHeight(float height) {
+        if (deletePanelGravity == TOP || deletePanelGravity == BOTTOM) {
+            return height - deletePanelLength;
+        } else {
+            return height;
+        }
+    }
+
+    private float validateStartX(float currentX) {
+        if (deletePanelGravity == LEFT) {
+            return currentX + deletePanelLength;
+        } else {
+            return currentX;
+        }
+    }
+
+    private float validateStartY(float currentY) {
+        if (deletePanelGravity == TOP) {
+            return currentY + deletePanelLength;
+        } else {
+            return currentY;
+        }
     }
 
     @Nullable
@@ -346,14 +411,15 @@ public class WidgetContainerLayout extends FrameLayout implements OnWidgetMotion
         bottomLeftPoint.setConnected(true);
         bottomRightPoint.setConnected(true);
 
-        int width = topRightPoint.getX() - topLeftPoint.getX();
-        int height = bottomLeftPoint.getY() - topLeftPoint.getY();
-        ViewGroup.LayoutParams layoutParams = view.getLayoutParams();
+        view.setX(topLeftPoint.getX());
+        view.setY(topLeftPoint.getY());
+
+        int width = Math.round(topRightPoint.getX() - topLeftPoint.getX());
+        int height = Math.round(bottomLeftPoint.getY() - topLeftPoint.getY());
+        FrameLayout.LayoutParams layoutParams = (LayoutParams) view.getLayoutParams();
         layoutParams.width = width;
         layoutParams.height = height;
         view.setLayoutParams(layoutParams);
-        view.setX(topLeftPoint.getX());
-        view.setY(topLeftPoint.getY());
     }
 
     private void setLastPosition(View view, WidgetMotionInfo motionInfo) {
@@ -375,7 +441,7 @@ public class WidgetContainerLayout extends FrameLayout implements OnWidgetMotion
     }
 
     private void setNewPosition(View view, WidgetMotionInfo motionInfo,
-                                int x, int y,
+                                float x, float y,
                                 int width, int height) {
         isOnAnimateWidget = true;
         AwesomeAnimation animation = new AwesomeAnimation.Builder(view)
@@ -496,5 +562,14 @@ public class WidgetContainerLayout extends FrameLayout implements OnWidgetMotion
             return false;
         }
         return true;
+    }
+
+    @IntDef({TOP, BOTTOM, LEFT, RIGHT})
+    @Retention(RetentionPolicy.SOURCE)
+    public @interface DeletePanelGravity {
+        int TOP = 0;
+        int BOTTOM = 1;
+        int LEFT = 2;
+        int RIGHT = 3;
     }
 }
