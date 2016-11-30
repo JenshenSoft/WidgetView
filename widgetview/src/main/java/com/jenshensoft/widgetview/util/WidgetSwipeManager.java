@@ -11,7 +11,7 @@ import android.view.ViewGroup;
 
 import com.jenshensoft.widgetview.WidgetView;
 import com.jenshensoft.widgetview.entity.WidgetMotionInfo;
-import com.jenshensoft.widgetview.listener.OnWidgetMoveUpListener;
+import com.jenshensoft.widgetview.listener.OnWidgetMotionListener;
 
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
@@ -36,7 +36,7 @@ public class WidgetSwipeManager implements View.OnTouchListener {
     @Nullable
     private WidgetMotionInfo motionInfo;
     @Nullable
-    private OnWidgetMoveUpListener onWidgetMoveUpListener;
+    private OnWidgetMotionListener onWidgetMotionListener;
     @Nullable
     private View view;
 
@@ -47,8 +47,8 @@ public class WidgetSwipeManager implements View.OnTouchListener {
         this.gestureDetector = new GestureDetector(context, new LongPressGestureDetector());
     }
 
-    public void setOnWidgetMoveUpListener(@Nullable OnWidgetMoveUpListener onWidgetMoveUpListener) {
-        this.onWidgetMoveUpListener = onWidgetMoveUpListener;
+    public void setOnWidgetMotionListener(@Nullable OnWidgetMotionListener onWidgetMotionListener) {
+        this.onWidgetMotionListener = onWidgetMotionListener;
     }
 
     @Override
@@ -61,7 +61,7 @@ public class WidgetSwipeManager implements View.OnTouchListener {
 
         switch (motionEvent.getAction()) {
             case MotionEvent.ACTION_DOWN:
-                return actionDown(view, layoutParams, motionEvent);
+                return actionDown(view, motionEvent);
             case MotionEvent.ACTION_MOVE:
                 if (motionInfo == null) {
                     return true;
@@ -105,7 +105,7 @@ public class WidgetSwipeManager implements View.OnTouchListener {
                 }
             case MotionEvent.ACTION_CANCEL:
             case MotionEvent.ACTION_UP:
-                actionUp(view, layoutParams);
+                actionUp(view);
                 return true;
             default:
                 return false;
@@ -116,7 +116,7 @@ public class WidgetSwipeManager implements View.OnTouchListener {
         return motionAction == MotionEvent.ACTION_DOWN || motionAction == MotionEvent.ACTION_MOVE;
     }
 
-    private boolean actionDown(View view, ViewGroup.LayoutParams layoutParams, MotionEvent motionEvent) {
+    private boolean actionDown(View view, MotionEvent motionEvent) {
         motionAction =  MotionEvent.ACTION_DOWN;
         this.view = view;
         if (dragAndDropByLongClick) {
@@ -128,41 +128,52 @@ public class WidgetSwipeManager implements View.OnTouchListener {
         float widgetY = view.getY();
         float fingerX = motionEvent.getX() + widgetX;
         float fingerY = motionEvent.getY() + widgetY;
+        int widgetHeight = view.getMeasuredHeight();
+        int widgetWidth = view.getMeasuredWidth();
         if (widgetX <= fingerX && widgetX + pointWidth >= fingerX &&
                 widgetY <= fingerY && widgetY + pointHeight >= fingerY) {
-            motionInfo = new WidgetMotionInfo(widgetX, widgetY, layoutParams.width, layoutParams.height, LEFT_TOP_ANGLE_MOTION);
-            return true;
-        } else if (widgetX + view.getMeasuredWidth() - pointWidth <= fingerX && widgetX + view.getMeasuredWidth() >= fingerX &&
+            motionInfo = new WidgetMotionInfo(widgetX, widgetY, widgetWidth, widgetHeight, LEFT_TOP_ANGLE_MOTION);
+        } else if (widgetX + widgetWidth - pointWidth <= fingerX && widgetX + widgetWidth >= fingerX &&
                 widgetY <= fingerY && widgetY + pointHeight >= fingerY) {
-            motionInfo = new WidgetMotionInfo(widgetX, widgetY, layoutParams.width, layoutParams.height, RIGHT_TOP_ANGLE_MOTION);
-            return true;
+            motionInfo = new WidgetMotionInfo(widgetX, widgetY, widgetWidth, widgetHeight,  RIGHT_TOP_ANGLE_MOTION);
         } else if (widgetX <= fingerX && widgetX + pointWidth >= fingerX &&
-                widgetY + view.getMeasuredHeight() - pointHeight <= fingerY && widgetY + view.getMeasuredHeight() >= fingerY) {
-            motionInfo = new WidgetMotionInfo(widgetX, widgetY, layoutParams.width, layoutParams.height, LEFT_BOTTOM_ANGLE_MOTION);
-            return true;
-        } else if (widgetX + view.getMeasuredWidth() - pointWidth <= fingerX && widgetX + view.getMeasuredWidth() >= fingerX &&
-                widgetY + view.getMeasuredHeight() - pointHeight <= fingerY && widgetY + view.getMeasuredHeight() >= fingerY) {
-            motionInfo = new WidgetMotionInfo(widgetX, widgetY, layoutParams.width, layoutParams.height, RIGHT_BOTTOM_ANGLE_MOTION);
-            return true;
+                widgetY + widgetHeight - pointHeight <= fingerY && widgetY + widgetHeight >= fingerY) {
+            motionInfo = new WidgetMotionInfo(widgetX, widgetY, widgetWidth, widgetHeight,  LEFT_BOTTOM_ANGLE_MOTION);
+        } else if (widgetX + widgetWidth - pointWidth <= fingerX && widgetX + widgetWidth >= fingerX &&
+                widgetY + widgetHeight - pointHeight <= fingerY && widgetY + widgetHeight >= fingerY) {
+            motionInfo = new WidgetMotionInfo(widgetX, widgetY, widgetWidth, widgetHeight,  RIGHT_BOTTOM_ANGLE_MOTION);
         } else if (!dragAndDropByLongClick) {
-            motionInfo = new WidgetMotionInfo(widgetX, widgetY, layoutParams.width, layoutParams.height, WIDGET_MOTION);
-            return true;
-        } else {
-            return true;
+            motionInfo = new WidgetMotionInfo(widgetX, widgetY, widgetWidth, widgetHeight, WIDGET_MOTION);
         }
+
+        if (onWidgetMotionListener != null && motionInfo != null) {
+            motionInfo.setCurrentWidgetPositionX(view.getX());
+            motionInfo.setCurrentWidgetPositionY(view.getY());
+            motionInfo.setCurrentWidth(view.getMeasuredWidth());
+            motionInfo.setCurrentHeight(view.getMeasuredHeight());
+            onWidgetMotionListener.onActionMove((WidgetView) view, motionInfo);
+        }
+        return true;
     }
 
     private void actionMove(View view, MotionEvent motionEvent) {
         motionAction =  MotionEvent.ACTION_MOVE;
-    }
-
-    private void actionUp(View view, ViewGroup.LayoutParams layoutParams) {
-        if (onWidgetMoveUpListener != null && motionInfo != null) {
+        if (onWidgetMotionListener != null && motionInfo != null) {
             motionInfo.setCurrentWidgetPositionX(view.getX());
             motionInfo.setCurrentWidgetPositionY(view.getY());
-            motionInfo.setCurrentHeight(layoutParams.height);
-            motionInfo.setCurrentWidth(layoutParams.width);
-            onWidgetMoveUpListener.onMoveUp((WidgetView) view, motionInfo);
+            motionInfo.setCurrentWidth(view.getMeasuredWidth());
+            motionInfo.setCurrentHeight(view.getMeasuredHeight());
+            onWidgetMotionListener.onActionMove((WidgetView) view, motionInfo);
+        }
+    }
+
+    private void actionUp(View view) {
+        if (onWidgetMotionListener != null && motionInfo != null) {
+            motionInfo.setCurrentWidgetPositionX(view.getX());
+            motionInfo.setCurrentWidgetPositionY(view.getY());
+            motionInfo.setCurrentWidth(view.getMeasuredWidth());
+            motionInfo.setCurrentHeight(view.getMeasuredHeight());
+            onWidgetMotionListener.onActionUp((WidgetView) view, motionInfo);
         }
         this.motionAction =  MotionEvent.ACTION_UP;
         this.motionInfo = null;
@@ -186,8 +197,7 @@ public class WidgetSwipeManager implements View.OnTouchListener {
             if (motionInfo != null && motionAction == MotionEvent.ACTION_DOWN) {
                 motionInfo.setMotionType(WIDGET_MOTION);
             } else if (motionAction == MotionEvent.ACTION_DOWN && view != null) {
-                ViewGroup.LayoutParams layoutParams = view.getLayoutParams();
-                motionInfo = new WidgetMotionInfo(view.getX(), view.getY(), layoutParams.width, layoutParams.height, WIDGET_MOTION);
+                motionInfo = new WidgetMotionInfo(view.getX(), view.getY(), view.getMeasuredWidth(), view.getMeasuredHeight(), WIDGET_MOTION);
             }
         }
     }

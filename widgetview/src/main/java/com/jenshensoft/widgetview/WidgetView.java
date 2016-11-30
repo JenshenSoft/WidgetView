@@ -1,16 +1,12 @@
 package com.jenshensoft.widgetview;
 
 
-import android.annotation.TargetApi;
 import android.content.Context;
 import android.content.res.TypedArray;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
-import android.graphics.drawable.BitmapDrawable;
-import android.graphics.drawable.Drawable;
-import android.graphics.drawable.VectorDrawable;
 import android.os.Build;
 import android.os.Parcel;
 import android.os.Parcelable;
@@ -19,23 +15,23 @@ import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.annotation.RequiresApi;
 import android.support.annotation.StyleRes;
-import android.support.v4.content.ContextCompat;
 import android.util.AttributeSet;
 import android.view.MotionEvent;
 import android.widget.FrameLayout;
 
 import com.jenshensoft.widgetview.entity.WidgetPosition;
-import com.jenshensoft.widgetview.listener.OnWidgetMoveUpListener;
+import com.jenshensoft.widgetview.listener.OnWidgetMotionListener;
 import com.jenshensoft.widgetview.util.WidgetSwipeManager;
 
 import static com.jenshensoft.widgetview.entity.WidgetPosition.EMPTY;
+import static com.jenshensoft.widgetview.util.BitmapUtil.getBitmap;
 
 public class WidgetView extends FrameLayout {
 
     private int pointHeight = 50;
     private int pointWidth = 50;
     private int borderOffset = 25;
-    private boolean dragAndDropByLongClick = true;
+    private boolean dragAndDropByLongClick = false;
     private int pointIcon = R.drawable.ic_point_angle;
     private boolean isPaddingValidated;
     private WidgetSwipeManager swipeManager;
@@ -133,8 +129,8 @@ public class WidgetView extends FrameLayout {
         return swipeManager.isInTouchMode();
     }
 
-    public void setOnWidgetMoveUpListener(@Nullable OnWidgetMoveUpListener onWidgetMoveUpListener) {
-        swipeManager.setOnWidgetMoveUpListener(onWidgetMoveUpListener);
+    public void setOnWidgetMoveUpListener(@Nullable OnWidgetMotionListener onWidgetMotionListener) {
+        swipeManager.setOnWidgetMotionListener(onWidgetMotionListener);
     }
 
     public WidgetPosition getWidgetPosition() {
@@ -209,26 +205,6 @@ public class WidgetView extends FrameLayout {
         canvas.drawBitmap(cornerBitmap, getMeasuredWidth() - pointWidth, getMeasuredHeight() - pointHeight, paintPoints);
     }
 
-    private Bitmap getBitmap(Context context, int drawableId) {
-        Drawable drawable = ContextCompat.getDrawable(context, drawableId);
-        if (drawable instanceof BitmapDrawable) {
-            return ((BitmapDrawable) drawable).getBitmap();
-        } else if (drawable instanceof VectorDrawable) {
-            return getBitmap((VectorDrawable) drawable);
-        } else {
-            throw new IllegalArgumentException("unsupported drawable type");
-        }
-    }
-
-    @TargetApi(Build.VERSION_CODES.LOLLIPOP)
-    private Bitmap getBitmap(VectorDrawable vectorDrawable) {
-        Bitmap bitmap = Bitmap.createBitmap(vectorDrawable.getIntrinsicWidth(),
-                vectorDrawable.getIntrinsicHeight(), Bitmap.Config.ARGB_8888);
-        Canvas canvas = new Canvas(bitmap);
-        vectorDrawable.setBounds(0, 0, canvas.getWidth(), canvas.getHeight());
-        vectorDrawable.draw(canvas);
-        return bitmap;
-    }
 
     /* inner types */
 

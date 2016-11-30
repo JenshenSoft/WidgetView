@@ -20,6 +20,8 @@
     <declare-styleable name="WidgetContainerLayout_Params" tools:ignore="ResourceName">
         <attr name="widgetContainer_columnCount" format="integer" />
         <attr name="widgetContainer_rowCount" format="integer" />
+        <attr name="widgetContainer_enableTrash" format="boolean" />
+        <attr name="widgetContainer_trashIcon" format="reference" />
         <attr name="widgetContainer_autoConnect_AvailabilityZone" format="integer" />
         <attr name="widgetContainer_connectOnlyEmptyPoints" format="boolean" />
     </declare-styleable>

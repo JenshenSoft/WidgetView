@@ -8,6 +8,7 @@
     android:orientation="vertical">
 
     <com.jenshensoft.widgetview.WidgetContainerLayout
+        android:id="@+id/container"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         app:widgetContainer_columnCount="7"

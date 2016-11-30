@@ -6,6 +6,7 @@ import android.animation.AnimatorListenerAdapter;
 import android.annotation.TargetApi;
 import android.content.Context;
 import android.content.res.TypedArray;
+import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
@@ -15,6 +16,7 @@ import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.annotation.StyleRes;
 import android.util.AttributeSet;
+import android.util.Log;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.FrameLayout;
@@ -23,7 +25,8 @@ import com.jenshen.awesomeanimation.AwesomeAnimation;
 import com.jenshensoft.widgetview.entity.Point;
 import com.jenshensoft.widgetview.entity.WidgetMotionInfo;
 import com.jenshensoft.widgetview.entity.WidgetPosition;
-import com.jenshensoft.widgetview.listener.OnWidgetMoveUpListener;
+import com.jenshensoft.widgetview.listener.OnWidgetMotionListener;
+import com.jenshensoft.widgetview.util.BitmapUtil;
 
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -31,12 +34,15 @@ import java.util.List;
 import java.util.Set;
 import java.util.TreeSet;
 
-public class WidgetContainerLayout extends FrameLayout implements OnWidgetMoveUpListener {
+public class WidgetContainerLayout extends FrameLayout implements OnWidgetMotionListener {
 
     private int columnCount = 4;
     private int rowCount = 4;
     private int autoConnectAvailabilityZone = 1000;
     private boolean connectOnlyEmptyPoints = false;
+    private boolean enableTrash = true;
+    private int trashIcon = R.drawable.ic_delete;
+    private int trashAvailabilityZone = 100;
     private List<WidgetView> widgets;
     private List<Point> points;
     private Paint paintLines;
@@ -88,11 +94,21 @@ public class WidgetContainerLayout extends FrameLayout implements OnWidgetMoveUp
     }
 
     @Override
+    public void draw(Canvas canvas) {
+        super.draw(canvas);
+
+        Log.e("TAG", "draw");
+    }
+
+    @Override
     protected void onDraw(Canvas canvas) {
         super.onDraw(canvas);
         if (isEnabled()) {
             drawLines(canvas);
             drawPoints(canvas);
+            if (enableTrash) {
+                drawTrash(canvas);
+            }
         }
     }
 
@@ -117,9 +133,35 @@ public class WidgetContainerLayout extends FrameLayout implements OnWidgetMoveUp
         }
     }
 
+    @Override
+    public void onActionDown(WidgetView view, WidgetMotionInfo motionInfo) {
+        inDeleteZone = false;
+    }
+
+    boolean inDeleteZone;
+
+    @Override
+    public void onActionMove(WidgetView view, WidgetMotionInfo motionInfo) {
+        float deleteX = 0;
+        float deleteY = 0;
+        float widgetPositionX = motionInfo.getCurrentWidgetPositionX();
+        float widgetPositionY = motionInfo.getCurrentWidgetPositionY();
+        if (deleteX - trashAvailabilityZone <= widgetPositionX && deleteX + trashAvailabilityZone >= widgetPositionX &&
+                deleteY - trashAvailabilityZone <= widgetPositionY && deleteY + trashAvailabilityZone >= widgetPositionY) {
+
+            inDeleteZone = true;
+        } else {
+
+            inDeleteZone = false;
+        }
+        invalidate();
+        Log.e("TAG", "onActionMove");
+    }
+
     @SuppressWarnings("ConstantConditions")
     @Override
-    public void onMoveUp(WidgetView view, WidgetMotionInfo motionInfo) {
+    public void onActionUp(WidgetView view, WidgetMotionInfo motionInfo) {
+        inDeleteZone = false;
         Point leftTopCorner = getPointByCoordinates(motionInfo.getCurrentWidgetPositionX(), motionInfo.getCurrentWidgetPositionY());
         Point rightTopCorner = getPointByCoordinates(motionInfo.getCurrentWidgetPositionX() + motionInfo.getCurrentWidth(),
                 motionInfo.getCurrentWidgetPositionY());
@@ -181,6 +223,8 @@ public class WidgetContainerLayout extends FrameLayout implements OnWidgetMoveUp
                 columnCount = attributes.getInt(R.styleable.WidgetContainerLayout_Params_widgetContainer_columnCount, columnCount);
                 rowCount = attributes.getInt(R.styleable.WidgetContainerLayout_Params_widgetContainer_rowCount, rowCount);
                 connectOnlyEmptyPoints = attributes.getBoolean(R.styleable.WidgetContainerLayout_Params_widgetContainer_connectOnlyEmptyPoints, connectOnlyEmptyPoints);
+                enableTrash = attributes.getBoolean(R.styleable.WidgetContainerLayout_Params_widgetContainer_enableTrash, enableTrash);
+                trashIcon = attributes.getResourceId(R.styleable.WidgetContainerLayout_Params_widgetContainer_trashIcon, trashIcon);
                 autoConnectAvailabilityZone = attributes.getDimensionPixelOffset(R.styleable.WidgetContainerLayout_Params_widgetContainer_autoConnect_AvailabilityZone, autoConnectAvailabilityZone);
             } finally {
                 attributes.recycle();
@@ -226,6 +270,18 @@ public class WidgetContainerLayout extends FrameLayout implements OnWidgetMoveUp
         for (Point point : points) {
             canvas.drawCircle(point.getX(), point.getY(), 10, paintPoints);
         }
+    }
+
+    private void drawTrash(Canvas canvas) {
+        Bitmap deleteBitmap;
+        if (inDeleteZone) {
+            Log.e("TAG", "IN Zone");
+            deleteBitmap = Bitmap.createScaledBitmap(BitmapUtil.getBitmap(getContext(), trashIcon), 200, 200, false);
+        } else {
+            Log.e("TAG", "OUT Zone");
+            deleteBitmap = Bitmap.createScaledBitmap(BitmapUtil.getBitmap(getContext(), trashIcon), 100, 100, false);
+        }
+        canvas.drawBitmap(deleteBitmap, 0, 0, paintPoints);
     }
 
     private WidgetView createWidgetView(View view) {
