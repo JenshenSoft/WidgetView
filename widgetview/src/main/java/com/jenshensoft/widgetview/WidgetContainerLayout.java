@@ -19,6 +19,8 @@ import android.util.AttributeSet;
 import android.util.Log;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.ViewParent;
+import android.view.animation.AccelerateDecelerateInterpolator;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
 
@@ -48,7 +50,7 @@ public class WidgetContainerLayout extends FrameLayout implements OnWidgetMotion
     private int rowCount = 4;
     private int autoConnectAvailabilityZone = 1000;
     @DeletePanelGravity
-    private int deletePanelGravity = BOTTOM;
+    private int deletePanelGravity = TOP;
     private int deletePanelLength = 200;
     private boolean connectOnlyEmptyPoints = false;
     private boolean enableTrash = true;
@@ -60,6 +62,7 @@ public class WidgetContainerLayout extends FrameLayout implements OnWidgetMotion
     private Paint paintLines;
     private Paint paintPoints;
     private boolean isOnAnimateWidget;
+    private boolean inDeleteArea;
 
     public WidgetContainerLayout(@NonNull Context context) {
         super(context);
@@ -103,30 +106,7 @@ public class WidgetContainerLayout extends FrameLayout implements OnWidgetMotion
                 updateViewPosition(widget);
             }
         }
-
-        if (enableTrash) {
-            deleteView.setVisibility(VISIBLE);
-            switch (deletePanelGravity) {
-                case DeletePanelGravity.TOP:
-                    deleteView.setX(getMeasuredWidth() / 2 - deleteView.getMeasuredWidth() / 2);
-                    deleteView.setY(deletePanelLength / 2 - deleteView.getMeasuredHeight() / 2);
-                    break;
-                case DeletePanelGravity.BOTTOM:
-                    deleteView.setX(getMeasuredWidth() / 2 - deleteView.getMeasuredWidth() / 2);
-                    deleteView.setY(getMeasuredHeight() - (deletePanelLength / 2) - deleteView.getMeasuredHeight() / 2);
-                    break;
-                case DeletePanelGravity.LEFT:
-                    deleteView.setX(deletePanelLength / 2 - deleteView.getMeasuredWidth() / 2);
-                    deleteView.setY(getMeasuredHeight() / 2 - deleteView.getMeasuredHeight() / 2);
-                    break;
-                case DeletePanelGravity.RIGHT:
-                    deleteView.setX(getMeasuredWidth() - (deletePanelLength / 2) - deleteView.getMeasuredWidth() / 2);
-                    deleteView.setY(getMeasuredHeight() / 2 - deleteView.getMeasuredHeight() / 2);
-                    break;
-            }
-        } else {
-            deleteView.setVisibility(GONE);
-        }
+        updateDeletePanel();
     }
 
     @Override
@@ -169,57 +149,100 @@ public class WidgetContainerLayout extends FrameLayout implements OnWidgetMotion
         float deleteY = deleteView.getY();
         float widgetPositionX = motionInfo.getCurrentWidgetPositionX();
         float widgetPositionY = motionInfo.getCurrentWidgetPositionY();
-        if (deleteX - trashAvailabilityZone <= widgetPositionX && deleteX + trashAvailabilityZone >= widgetPositionX &&
-                deleteY - trashAvailabilityZone <= widgetPositionY && deleteY + trashAvailabilityZone >= widgetPositionY) {
+        if (deleteX - trashAvailabilityZone - view.getMeasuredWidth() <= widgetPositionX &&
+                deleteX + deleteView.getMeasuredWidth() + trashAvailabilityZone >= widgetPositionX &&
+                deleteY - trashAvailabilityZone - view.getMeasuredHeight() <= widgetPositionY &&
+                deleteY + deleteView.getMeasuredHeight() + trashAvailabilityZone >= widgetPositionY) {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN) {
                 deleteView.setImageAlpha(255);
             } else {
                 deleteView.setAlpha(1f);
             }
+            inDeleteArea = true;
         } else {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN) {
                 deleteView.setImageAlpha(150);
             } else {
                 deleteView.setAlpha(0.7f);
             }
+            inDeleteArea = false;
         }
         invalidate();
         Log.e("TAG", "onActionMove");
     }
 
+    private void removeWidget(WidgetView view) {
+        view.setOnWidgetMoveUpListener(null);
+        ViewParent parent = view.getParent();
+        ((ViewGroup) parent).removeView(view);
+        widgets.remove(view);
+    }
+
     @SuppressWarnings("ConstantConditions")
     @Override
-    public void onActionUp(WidgetView view, WidgetMotionInfo motionInfo) {
-        Point leftTopCorner = getPointByCoordinates(motionInfo.getCurrentWidgetPositionX(), motionInfo.getCurrentWidgetPositionY());
-        Point rightTopCorner = getPointByCoordinates(motionInfo.getCurrentWidgetPositionX() + motionInfo.getCurrentWidth(),
-                motionInfo.getCurrentWidgetPositionY());
-        Point leftBottomCorner = getPointByCoordinates(motionInfo.getCurrentWidgetPositionX(),
-                motionInfo.getCurrentWidgetPositionY() + motionInfo.getCurrentHeight());
-        Point rightBottomCorner = getPointByCoordinates(motionInfo.getCurrentWidgetPositionX() + motionInfo.getCurrentWidth(),
-                motionInfo.getCurrentWidgetPositionY() + motionInfo.getCurrentHeight());
-        if (!validateNewPosition(leftTopCorner, rightTopCorner, leftBottomCorner, rightBottomCorner)) {
-            setLastPosition(view, motionInfo);
+    public void onActionUp(final WidgetView view, WidgetMotionInfo motionInfo) {
+        if (inDeleteArea) {
+            AwesomeAnimation awesomeAnimation = new AwesomeAnimation.Builder(view)
+                    .setX(AwesomeAnimation.CoordinationMode.COORDINATES, motionInfo.getCurrentWidgetPositionX(), deleteView.getX() - view.getMeasuredWidth() / 2 + deleteView.getMeasuredWidth() / 2)
+                    .setY(AwesomeAnimation.CoordinationMode.COORDINATES, motionInfo.getCurrentWidgetPositionY(), deleteView.getY() - view.getMeasuredHeight() / 2 + deleteView.getMeasuredHeight() / 2)
+                    .setSizeX(AwesomeAnimation.SizeMode.SCALE, 1.0f, 0)
+                    .setSizeY(AwesomeAnimation.SizeMode.SCALE, 1.0f, 0)
+                    .setDuration(500)
+                    .setInterpolator(new AccelerateDecelerateInterpolator())
+                    .setAlpha(1.0f, 0.0f)
+                    .setRotation(0, 10, 0, -10, 0)
+                    .build();
+            awesomeAnimation.getAnimatorSet()
+                    .addListener(new AnimatorListenerAdapter() {
+                        @Override
+                        public void onAnimationEnd(Animator animation) {
+                            removeWidget(view);
+                        }
+                    });
+
+            awesomeAnimation.start();
+
+            new AwesomeAnimation.Builder(deleteView)
+                    .setRotation(0, 10, 0, -10, 0)
+                    .setDuration(500)
+                    .setInterpolator(new AccelerateDecelerateInterpolator())
+                    .setSizeX(AwesomeAnimation.SizeMode.SCALE, 1.0f, 1.9f, 1.0f)
+                    .setSizeY(AwesomeAnimation.SizeMode.SCALE, 1.0f, 1.9f, 1.0f)
+                    .build()
+                    .start();
+
         } else {
-            if (leftTopCorner.getX() == leftBottomCorner.getX() &&
-                    rightTopCorner.getX() == rightBottomCorner.getX() &&
-                    leftTopCorner.getY() == rightTopCorner.getY() &&
-                    leftBottomCorner.getY() == rightBottomCorner.getY()) {
-
-                WidgetPosition widgetPosition = view.getWidgetPosition();
-                widgetPosition.setTopLeftColumnLine(leftTopCorner.getColumn());
-                widgetPosition.setTopLeftRowLine(leftTopCorner.getRow());
-                widgetPosition.setTopRightColumnLine(rightTopCorner.getColumn());
-                widgetPosition.setTopRightRowLine(rightTopCorner.getRow());
-                widgetPosition.setBottomLeftColumnLine(leftBottomCorner.getColumn());
-                widgetPosition.setBottomLeftRowLine(leftBottomCorner.getRow());
-                widgetPosition.setBottomRightColumnLine(rightBottomCorner.getColumn());
-                widgetPosition.setBottomRightRowLine(rightBottomCorner.getRow());
-
-                int width = Math.round(rightTopCorner.getX() - leftTopCorner.getX());
-                int height = Math.round(leftBottomCorner.getY() - leftTopCorner.getY());
-                setNewPosition(view, motionInfo, leftTopCorner.getX(), leftTopCorner.getY(), width, height);
+            Point leftTopCorner = getPointByCoordinates(motionInfo.getCurrentWidgetPositionX(), motionInfo.getCurrentWidgetPositionY());
+            Point rightTopCorner = getPointByCoordinates(motionInfo.getCurrentWidgetPositionX() + motionInfo.getCurrentWidth(),
+                    motionInfo.getCurrentWidgetPositionY());
+            Point leftBottomCorner = getPointByCoordinates(motionInfo.getCurrentWidgetPositionX(),
+                    motionInfo.getCurrentWidgetPositionY() + motionInfo.getCurrentHeight());
+            Point rightBottomCorner = getPointByCoordinates(motionInfo.getCurrentWidgetPositionX() + motionInfo.getCurrentWidth(),
+                    motionInfo.getCurrentWidgetPositionY() + motionInfo.getCurrentHeight());
+            if (!validateNewPosition(leftTopCorner, rightTopCorner, leftBottomCorner, rightBottomCorner)) {
+                setLastPosition(view, motionInfo);
             } else {
-                throw new RuntimeException("Something went wrong");
+                if (leftTopCorner.getX() == leftBottomCorner.getX() &&
+                        rightTopCorner.getX() == rightBottomCorner.getX() &&
+                        leftTopCorner.getY() == rightTopCorner.getY() &&
+                        leftBottomCorner.getY() == rightBottomCorner.getY()) {
+
+                    WidgetPosition widgetPosition = view.getWidgetPosition();
+                    widgetPosition.setTopLeftColumnLine(leftTopCorner.getColumn());
+                    widgetPosition.setTopLeftRowLine(leftTopCorner.getRow());
+                    widgetPosition.setTopRightColumnLine(rightTopCorner.getColumn());
+                    widgetPosition.setTopRightRowLine(rightTopCorner.getRow());
+                    widgetPosition.setBottomLeftColumnLine(leftBottomCorner.getColumn());
+                    widgetPosition.setBottomLeftRowLine(leftBottomCorner.getRow());
+                    widgetPosition.setBottomRightColumnLine(rightBottomCorner.getColumn());
+                    widgetPosition.setBottomRightRowLine(rightBottomCorner.getRow());
+
+                    int width = Math.round(rightTopCorner.getX() - leftTopCorner.getX());
+                    int height = Math.round(leftBottomCorner.getY() - leftTopCorner.getY());
+                    setNewPosition(view, motionInfo, leftTopCorner.getX(), leftTopCorner.getY(), width, height);
+                } else {
+                    throw new RuntimeException("Something went wrong");
+                }
             }
         }
     }
@@ -420,6 +443,32 @@ public class WidgetContainerLayout extends FrameLayout implements OnWidgetMotion
         layoutParams.width = width;
         layoutParams.height = height;
         view.setLayoutParams(layoutParams);
+    }
+
+    private void updateDeletePanel() {
+        if (enableTrash) {
+            deleteView.setVisibility(VISIBLE);
+            switch (deletePanelGravity) {
+                case DeletePanelGravity.TOP:
+                    deleteView.setX(getMeasuredWidth() / 2 - deleteView.getMeasuredWidth() / 2);
+                    deleteView.setY(deletePanelLength / 2 - deleteView.getMeasuredHeight() / 2);
+                    break;
+                case DeletePanelGravity.BOTTOM:
+                    deleteView.setX(getMeasuredWidth() / 2 - deleteView.getMeasuredWidth() / 2);
+                    deleteView.setY(getMeasuredHeight() - (deletePanelLength / 2) - deleteView.getMeasuredHeight() / 2);
+                    break;
+                case DeletePanelGravity.LEFT:
+                    deleteView.setX(deletePanelLength / 2 - deleteView.getMeasuredWidth() / 2);
+                    deleteView.setY(getMeasuredHeight() / 2 - deleteView.getMeasuredHeight() / 2);
+                    break;
+                case DeletePanelGravity.RIGHT:
+                    deleteView.setX(getMeasuredWidth() - (deletePanelLength / 2) - deleteView.getMeasuredWidth() / 2);
+                    deleteView.setY(getMeasuredHeight() / 2 - deleteView.getMeasuredHeight() / 2);
+                    break;
+            }
+        } else {
+            deleteView.setVisibility(GONE);
+        }
     }
 
     private void setLastPosition(View view, WidgetMotionInfo motionInfo) {
