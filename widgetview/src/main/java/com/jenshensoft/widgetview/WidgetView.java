@@ -132,6 +132,7 @@ public class WidgetView extends FrameLayout {
         swipeManager.setOnWidgetMotionListener(onWidgetMotionListener);
     }
 
+    @NonNull
     public WidgetPosition getWidgetPosition() {
         return widgetPosition;
     }

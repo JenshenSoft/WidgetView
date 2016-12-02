@@ -241,7 +241,12 @@ public class WidgetContainerLayout extends FrameLayout implements OnWidgetMotion
         }
     }
 
-    public void addWidget(View view) {
+    @NonNull
+    public List<WidgetView> getWidgets() {
+        return widgets;
+    }
+
+    public void addWidget(@NonNull View view) {
         WidgetView widgetView = createWidgetView(view);
         this.addView(widgetView);
     }
