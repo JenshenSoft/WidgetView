@@ -48,14 +48,14 @@ public class WidgetContainerLayout extends FrameLayout implements OnWidgetMotion
 
     private int columnCount = 4;
     private int rowCount = 4;
-    private int autoConnectAvailabilityZone = 1000;
-    @DeletePanelGravity
-    private int deletePanelGravity = TOP;
-    private int deletePanelLength = 200;
+    private int autoConnectAvailabilityZone = -1;
     private boolean connectOnlyEmptyPoints = false;
     private boolean enableTrash = true;
+    @DeletePanelGravity
+    private int deletePanelGravity = TOP;
+    private int deletePanelLength = -1;
     private int trashIcon = R.drawable.ic_delete;
-    private int trashAvailabilityZone = 100;
+    private int trashAvailabilityZone = -1;
     private ImageView deleteView;
     private List<WidgetView> widgets;
     private List<Point> points;
@@ -141,6 +141,7 @@ public class WidgetContainerLayout extends FrameLayout implements OnWidgetMotion
 
     @Override
     public void onActionDown(WidgetView view, WidgetMotionInfo motionInfo) {
+        //ignored
     }
 
     @Override
@@ -169,13 +170,6 @@ public class WidgetContainerLayout extends FrameLayout implements OnWidgetMotion
         }
         invalidate();
         Log.e("TAG", "onActionMove");
-    }
-
-    private void removeWidget(WidgetView view) {
-        view.setOnWidgetMoveUpListener(null);
-        ViewParent parent = view.getParent();
-        ((ViewGroup) parent).removeView(view);
-        widgets.remove(view);
     }
 
     @SuppressWarnings("ConstantConditions")
@@ -264,6 +258,17 @@ public class WidgetContainerLayout extends FrameLayout implements OnWidgetMotion
         paintPoints = new Paint();
         paintPoints.setColor(Color.GREEN);
         paintPoints.setStrokeWidth(5);
+
+        if (autoConnectAvailabilityZone == -1) {
+            autoConnectAvailabilityZone = getContext().getResources().getDimensionPixelOffset(R.dimen.widgetView_autoConnect_availabilityZone);
+        }
+        if (trashAvailabilityZone == -1) {
+            trashAvailabilityZone = getContext().getResources().getDimensionPixelOffset(R.dimen.widgetView_trashAvailabilityZone);
+        }
+        if (deletePanelLength == -1) {
+            deletePanelLength = getContext().getResources().getDimensionPixelOffset(R.dimen.widgetView_deletePanel_length);
+        }
+
         setWillNotDraw(false);
         createDeleteView();
     }
@@ -469,6 +474,13 @@ public class WidgetContainerLayout extends FrameLayout implements OnWidgetMotion
         } else {
             deleteView.setVisibility(GONE);
         }
+    }
+
+    private void removeWidget(WidgetView view) {
+        view.setOnWidgetMoveUpListener(null);
+        ViewParent parent = view.getParent();
+        ((ViewGroup) parent).removeView(view);
+        widgets.remove(view);
     }
 
     private void setLastPosition(View view, WidgetMotionInfo motionInfo) {

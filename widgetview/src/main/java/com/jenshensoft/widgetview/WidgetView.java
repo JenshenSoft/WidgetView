@@ -28,9 +28,9 @@ import static com.jenshensoft.widgetview.util.BitmapUtil.getBitmap;
 
 public class WidgetView extends FrameLayout {
 
-    private int pointHeight = 50;
-    private int pointWidth = 50;
-    private int borderOffset = 25;
+    private int pointHeight = -1;
+    private int pointWidth = -1;
+    private int borderOffset = -1;
     private boolean dragAndDropByLongClick = false;
     private int pointIcon = R.drawable.ic_point_angle;
     private boolean isPaddingValidated;
@@ -76,7 +76,6 @@ public class WidgetView extends FrameLayout {
     @Override
     public boolean isEnabled() {
         return super.isEnabled();
-
     }
 
     @Override
@@ -102,7 +101,7 @@ public class WidgetView extends FrameLayout {
     @Override
     protected void onSizeChanged(int w, int h, int oldw, int oldh) {
         super.onSizeChanged(w, h, oldw, oldh);
-        if (isEnabled() &&!isPaddingValidated) {
+        if (isEnabled() && !isPaddingValidated) {
             setPadding(getPaddingLeft() + borderOffset, getPaddingTop() + borderOffset, getPaddingRight() + borderOffset, getPaddingBottom() + borderOffset);
             isPaddingValidated = true;
         }
@@ -189,6 +188,21 @@ public class WidgetView extends FrameLayout {
                         widgetPosition.getBottomRightRowLine();
                 setId(Integer.valueOf(number));
             }
+        }
+        if (pointWidth == -1) {
+            pointWidth = getResources().getDimensionPixelOffset(R.dimen.widgetView_point_width);
+        }
+
+        if (pointHeight == -1) {
+            pointHeight = getResources().getDimensionPixelOffset(R.dimen.widgetView_point_height);
+        }
+
+        if (pointHeight == -1) {
+            pointHeight = getResources().getDimensionPixelOffset(R.dimen.widgetView_point_height);
+        }
+
+        if (borderOffset == -1) {
+            borderOffset = (pointHeight + pointWidth) / 4;
         }
         swipeManager = new WidgetSwipeManager(getContext(), pointWidth, pointHeight, dragAndDropByLongClick);
         paintPoints = new Paint();

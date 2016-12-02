@@ -7,7 +7,6 @@ import android.support.annotation.Nullable;
 import android.view.GestureDetector;
 import android.view.MotionEvent;
 import android.view.View;
-import android.view.ViewGroup;
 import android.widget.FrameLayout;
 
 import com.jenshensoft.widgetview.WidgetView;
@@ -69,30 +68,46 @@ public class WidgetSwipeManager implements View.OnTouchListener {
                 }
                 switch (motionInfo.getMotionType()) {
                     case LEFT_TOP_ANGLE_MOTION:
-                        view.setX(motionInfo.getLastWidgetPositionX() + shiftX);
-                        view.setY(motionInfo.getLastWidgetPositionY() + shiftY);
-                        layoutParams.width = Math.round(motionInfo.getLastWidth() - shiftX);
-                        layoutParams.height = Math.round(motionInfo.getLastHeight() - shiftY);
+                        if (motionInfo.getLastWidth() - shiftX > pointWidth * 2) {
+                            view.setX(motionInfo.getLastWidgetPositionX() + shiftX);
+                            layoutParams.width = Math.round(motionInfo.getLastWidth() - shiftX);
+                        }
+                        if (motionInfo.getLastHeight() - shiftY > pointHeight * 2) {
+                            view.setY(motionInfo.getLastWidgetPositionY() + shiftY);
+                            layoutParams.height = Math.round(motionInfo.getLastHeight() - shiftY);
+                        }
                         view.setLayoutParams(layoutParams);
                         actionMove(view, motionEvent);
                         return true;
                     case RIGHT_TOP_ANGLE_MOTION:
-                        view.setY(motionInfo.getLastWidgetPositionY() + shiftY);
-                        layoutParams.width = Math.round(motionInfo.getLastWidth() + shiftX);
-                        layoutParams.height = Math.round(motionInfo.getLastHeight() - shiftY);
+                        if (motionInfo.getLastWidth() + shiftX > pointWidth * 2) {
+                            layoutParams.width = Math.round(motionInfo.getLastWidth() + shiftX);
+                        }
+                        if (motionInfo.getLastHeight() - shiftY > pointHeight * 2) {
+                            view.setY(motionInfo.getLastWidgetPositionY() + shiftY);
+                            layoutParams.height = Math.round(motionInfo.getLastHeight() - shiftY);
+                        }
                         view.setLayoutParams(layoutParams);
                         actionMove(view, motionEvent);
                         return true;
                     case LEFT_BOTTOM_ANGLE_MOTION:
-                        view.setX(motionInfo.getLastWidgetPositionX() + shiftX);
-                        layoutParams.width = Math.round(motionInfo.getLastWidth() - shiftX);
-                        layoutParams.height = Math.round(motionInfo.getLastHeight() + shiftY);
+                        if (motionInfo.getLastWidth() - shiftX > pointWidth * 2) {
+                            view.setX(motionInfo.getLastWidgetPositionX() + shiftX);
+                            layoutParams.width = Math.round(motionInfo.getLastWidth() - shiftX);
+                        }
+                        if (motionInfo.getLastHeight() + shiftY > pointHeight * 2) {
+                            layoutParams.height = Math.round(motionInfo.getLastHeight() + shiftY);
+                        }
                         view.setLayoutParams(layoutParams);
                         actionMove(view, motionEvent);
                         return true;
                     case RIGHT_BOTTOM_ANGLE_MOTION:
-                        layoutParams.width = Math.round(motionInfo.getLastWidth() + shiftX);
-                        layoutParams.height = Math.round(motionInfo.getLastHeight() + shiftY);
+                        if (motionInfo.getLastWidth() + shiftX > pointWidth * 2) {
+                            layoutParams.width = Math.round(motionInfo.getLastWidth() + shiftX);
+                        }
+                        if (motionInfo.getLastHeight() + shiftY > pointHeight * 2) {
+                            layoutParams.height = Math.round(motionInfo.getLastHeight() + shiftY);
+                        }
                         view.setLayoutParams(layoutParams);
                         actionMove(view, motionEvent);
                         return true;
@@ -118,7 +133,7 @@ public class WidgetSwipeManager implements View.OnTouchListener {
     }
 
     private boolean actionDown(View view, MotionEvent motionEvent) {
-        motionAction =  MotionEvent.ACTION_DOWN;
+        motionAction = MotionEvent.ACTION_DOWN;
         this.view = view;
         if (dragAndDropByLongClick) {
             gestureDetector.onTouchEvent(motionEvent);
@@ -136,13 +151,13 @@ public class WidgetSwipeManager implements View.OnTouchListener {
             motionInfo = new WidgetMotionInfo(widgetX, widgetY, widgetWidth, widgetHeight, LEFT_TOP_ANGLE_MOTION);
         } else if (widgetX + widgetWidth - pointWidth <= fingerX && widgetX + widgetWidth >= fingerX &&
                 widgetY <= fingerY && widgetY + pointHeight >= fingerY) {
-            motionInfo = new WidgetMotionInfo(widgetX, widgetY, widgetWidth, widgetHeight,  RIGHT_TOP_ANGLE_MOTION);
+            motionInfo = new WidgetMotionInfo(widgetX, widgetY, widgetWidth, widgetHeight, RIGHT_TOP_ANGLE_MOTION);
         } else if (widgetX <= fingerX && widgetX + pointWidth >= fingerX &&
                 widgetY + widgetHeight - pointHeight <= fingerY && widgetY + widgetHeight >= fingerY) {
-            motionInfo = new WidgetMotionInfo(widgetX, widgetY, widgetWidth, widgetHeight,  LEFT_BOTTOM_ANGLE_MOTION);
+            motionInfo = new WidgetMotionInfo(widgetX, widgetY, widgetWidth, widgetHeight, LEFT_BOTTOM_ANGLE_MOTION);
         } else if (widgetX + widgetWidth - pointWidth <= fingerX && widgetX + widgetWidth >= fingerX &&
                 widgetY + widgetHeight - pointHeight <= fingerY && widgetY + widgetHeight >= fingerY) {
-            motionInfo = new WidgetMotionInfo(widgetX, widgetY, widgetWidth, widgetHeight,  RIGHT_BOTTOM_ANGLE_MOTION);
+            motionInfo = new WidgetMotionInfo(widgetX, widgetY, widgetWidth, widgetHeight, RIGHT_BOTTOM_ANGLE_MOTION);
         } else if (!dragAndDropByLongClick) {
             motionInfo = new WidgetMotionInfo(widgetX, widgetY, widgetWidth, widgetHeight, WIDGET_MOTION);
         }
@@ -158,7 +173,7 @@ public class WidgetSwipeManager implements View.OnTouchListener {
     }
 
     private void actionMove(View view, MotionEvent motionEvent) {
-        motionAction =  MotionEvent.ACTION_MOVE;
+        motionAction = MotionEvent.ACTION_MOVE;
         if (onWidgetMotionListener != null && motionInfo != null) {
             motionInfo.setCurrentWidgetPositionX(view.getX());
             motionInfo.setCurrentWidgetPositionY(view.getY());
@@ -169,7 +184,7 @@ public class WidgetSwipeManager implements View.OnTouchListener {
     }
 
     private void actionUp(View view) {
-        this.motionAction =  MotionEvent.ACTION_UP;
+        this.motionAction = MotionEvent.ACTION_UP;
         if (onWidgetMotionListener != null && motionInfo != null) {
             motionInfo.setCurrentWidgetPositionX(view.getX());
             motionInfo.setCurrentWidgetPositionY(view.getY());

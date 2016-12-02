@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <dimen name="widgetView_point_width">20dp</dimen>
+    <dimen name="widgetView_point_height">20dp</dimen>
+    <dimen name="widgetView_deletePanel_length">50dp</dimen>
+    <dimen name="widgetView_trashAvailabilityZone">5dp</dimen>
+    <dimen name="widgetView_autoConnect_availabilityZone">50dp</dimen>
+</resources>
