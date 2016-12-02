@@ -167,7 +167,7 @@ public class WidgetSwipeManager implements View.OnTouchListener {
             motionInfo.setCurrentWidgetPositionY(view.getY());
             motionInfo.setCurrentWidth(view.getMeasuredWidth());
             motionInfo.setCurrentHeight(view.getMeasuredHeight());
-            onWidgetMotionListener.onActionMove((WidgetView) view, motionInfo);
+            onWidgetMotionListener.onActionDown((WidgetView) view, motionInfo);
         }
         return true;
     }

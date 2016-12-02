@@ -127,7 +127,7 @@ public class WidgetContainerLayout extends FrameLayout implements OnWidgetMotion
             widgets.add(widgetView);
         } else if (deleteView != child) {
             ((ViewGroup) child.getParent()).removeView(child);
-            addWidget(child);
+            addViewForWidget(child);
         }
     }
 
@@ -246,9 +246,13 @@ public class WidgetContainerLayout extends FrameLayout implements OnWidgetMotion
         return widgets;
     }
 
-    public void addWidget(@NonNull View view) {
+    public void addViewForWidget(@NonNull View view) {
         WidgetView widgetView = createWidgetView(view);
-        this.addView(widgetView);
+        addWidgetView(widgetView);
+    }
+
+    private void addWidgetView(@NonNull WidgetView view) {
+        this.addView(view);
     }
 
 
