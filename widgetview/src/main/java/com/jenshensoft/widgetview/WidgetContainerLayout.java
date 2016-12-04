@@ -480,6 +480,11 @@ public class WidgetContainerLayout extends FrameLayout implements OnWidgetMotion
                     deleteView.setY(getMeasuredHeight() / 2 - deleteView.getMeasuredHeight() / 2);
                     break;
             }
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN) {
+                deleteView.setImageAlpha(150);
+            } else {
+                deleteView.setAlpha(0.7f);
+            }
         } else {
             deleteView.setVisibility(GONE);
         }
@@ -559,28 +564,28 @@ public class WidgetContainerLayout extends FrameLayout implements OnWidgetMotion
             WidgetPosition widgetPosition = view.getWidgetPosition();
             String errorMessage = "All pointers should be set. There are ";
             if (widgetPosition.getTopLeftColumnLine() == WidgetPosition.EMPTY) {
-                errorMessage += ", TopLeft column not set";
+                errorMessage += "TopLeft column not set, ";
             }
             if (widgetPosition.getTopLeftRowLine() == WidgetPosition.EMPTY) {
-                errorMessage += ", TopLeft row not set";
+                errorMessage += "TopLeft row not set, ";
             }
             if (widgetPosition.getTopRightColumnLine() == WidgetPosition.EMPTY) {
-                errorMessage += ", TopRight column not set";
+                errorMessage += "TopRight column not set, ";
             }
             if (widgetPosition.getTopRightRowLine() == WidgetPosition.EMPTY) {
-                errorMessage += ", TopRight column not set";
+                errorMessage += "TopRight column not set, ";
             }
             if (widgetPosition.getBottomLeftColumnLine() == WidgetPosition.EMPTY) {
-                errorMessage += ", TopLeft column not set";
+                errorMessage += "TopLeft column not set, ";
             }
             if (widgetPosition.getBottomLeftRowLine() == WidgetPosition.EMPTY) {
-                errorMessage += ", TopLeft row not set";
+                errorMessage += "TopLeft row not set, ";
             }
             if (widgetPosition.getBottomRightColumnLine() == WidgetPosition.EMPTY) {
-                errorMessage += ", TopRight column not set";
+                errorMessage += "TopRight column not set, ";
             }
             if (widgetPosition.getBottomRightRowLine() == WidgetPosition.EMPTY) {
-                errorMessage += ", TopRight column not set";
+                errorMessage += "TopRight column not set";
             }
             errorMessage += ";";
             throw new RuntimeException(errorMessage);

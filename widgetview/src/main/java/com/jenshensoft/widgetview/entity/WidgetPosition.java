@@ -20,7 +20,9 @@ public class WidgetPosition implements Parcelable {
     private int bottomRightColumnLine = EMPTY;
     private int bottomRightRowLine = EMPTY;
 
+
     public WidgetPosition() {
+
     }
 
     public WidgetPosition(int topLeftColumnLine, int topLeftRowLine,
@@ -140,4 +142,34 @@ public class WidgetPosition implements Parcelable {
             return new WidgetPosition[size];
         }
     };
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+
+        WidgetPosition that = (WidgetPosition) o;
+
+        return topLeftColumnLine == that.topLeftColumnLine &&
+                topLeftRowLine == that.topLeftRowLine &&
+                topRightColumnLine == that.topRightColumnLine &&
+                topRightRowLine == that.topRightRowLine &&
+                bottomLeftColumnLine == that.bottomLeftColumnLine &&
+                bottomLeftRowLine == that.bottomLeftRowLine &&
+                bottomRightColumnLine == that.bottomRightColumnLine &&
+                bottomRightRowLine == that.bottomRightRowLine;
+    }
+
+    @Override
+    public int hashCode() {
+        int result = topLeftColumnLine;
+        result = 31 * result + topLeftRowLine;
+        result = 31 * result + topRightColumnLine;
+        result = 31 * result + topRightRowLine;
+        result = 31 * result + bottomLeftColumnLine;
+        result = 31 * result + bottomLeftRowLine;
+        result = 31 * result + bottomRightColumnLine;
+        result = 31 * result + bottomRightRowLine;
+        return result;
+    }
 }
