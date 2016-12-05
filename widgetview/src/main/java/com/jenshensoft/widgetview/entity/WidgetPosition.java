@@ -103,6 +103,17 @@ public class WidgetPosition implements Parcelable {
         this.bottomRightRowLine = bottomRightRowLine;
     }
 
+    public boolean isEmpty() {
+        return topLeftColumnLine == EMPTY ||
+                topLeftRowLine ==  EMPTY ||
+                topRightColumnLine ==  EMPTY ||
+                topRightRowLine ==  EMPTY ||
+                bottomLeftColumnLine ==  EMPTY ||
+                bottomLeftRowLine ==  EMPTY ||
+                bottomRightColumnLine ==  EMPTY ||
+                bottomRightRowLine ==  EMPTY;
+    }
+
     @Override
     public int describeContents() {
         return 0;
