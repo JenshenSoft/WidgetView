@@ -16,10 +16,10 @@ import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.annotation.StyleRes;
 import android.util.AttributeSet;
-import android.util.Log;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.ViewParent;
+import android.view.ViewTreeObserver;
 import android.view.animation.AccelerateDecelerateInterpolator;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
@@ -106,6 +106,7 @@ public class WidgetContainerLayout extends FrameLayout implements OnWidgetMotion
                 updateViewPosition(widget);
             }
         }
+
         updateDeletePanel();
     }
 
@@ -168,8 +169,6 @@ public class WidgetContainerLayout extends FrameLayout implements OnWidgetMotion
             }
             inDeleteArea = false;
         }
-        invalidate();
-        Log.e("TAG", "onActionMove");
     }
 
     @SuppressWarnings("ConstantConditions")
@@ -428,7 +427,7 @@ public class WidgetContainerLayout extends FrameLayout implements OnWidgetMotion
         throw new RuntimeException("Can't find the point for corner. Are you sure that column " + column + " and row " + row + " fall within the screen");
     }
 
-    private void updateViewPosition(WidgetView view) {
+    private void updateViewPosition(final WidgetView view) {
         if (hasAnyIndexes(view)) {
             checkPointsSet(view);
             checkOppositeLines(view);
@@ -451,12 +450,20 @@ public class WidgetContainerLayout extends FrameLayout implements OnWidgetMotion
         view.setX(topLeftPoint.getX());
         view.setY(topLeftPoint.getY());
 
-        int width = Math.round(topRightPoint.getX() - topLeftPoint.getX());
-        int height = Math.round(bottomLeftPoint.getY() - topLeftPoint.getY());
-        FrameLayout.LayoutParams layoutParams = (LayoutParams) view.getLayoutParams();
-        layoutParams.width = width;
-        layoutParams.height = height;
-        view.setLayoutParams(layoutParams);
+        final int width = Math.round(topRightPoint.getX() - topLeftPoint.getX());
+        final int height = Math.round(bottomLeftPoint.getY() - topLeftPoint.getY());
+
+        ViewTreeObserver vto = view.getViewTreeObserver();
+        vto.addOnGlobalLayoutListener(new ViewTreeObserver.OnGlobalLayoutListener() {
+            @Override
+            public void onGlobalLayout() {
+                view.getViewTreeObserver().removeGlobalOnLayoutListener(this);
+                FrameLayout.LayoutParams layoutParams = (LayoutParams) view.getLayoutParams();
+                layoutParams.width = width;
+                layoutParams.height = height;
+                view.setLayoutParams(layoutParams);
+            }
+        });
     }
 
     private void updateDeletePanel() {
