@@ -119,6 +119,7 @@ public class WidgetContainerLayout extends FrameLayout implements OnWidgetMotion
                 updateViewPosition(widget);
             }
         }
+
         updateDeletePanel();
         lastWidth = getMeasuredWidth();
         lastHeight = getMeasuredHeight();
@@ -393,7 +394,7 @@ public class WidgetContainerLayout extends FrameLayout implements OnWidgetMotion
     }
 
     private float validateWidth(float width) {
-        if (deletePanelGravity == LEFT || deletePanelGravity == RIGHT) {
+        if (isEnabled() && (deletePanelGravity == LEFT || deletePanelGravity == RIGHT)) {
             return width - deletePanelLength;
         } else {
             return width;
@@ -401,7 +402,7 @@ public class WidgetContainerLayout extends FrameLayout implements OnWidgetMotion
     }
 
     private float validateHeight(float height) {
-        if (deletePanelGravity == TOP || deletePanelGravity == BOTTOM) {
+        if (isEnabled() && (deletePanelGravity == TOP || deletePanelGravity == BOTTOM)) {
             return height - deletePanelLength;
         } else {
             return height;
@@ -409,7 +410,7 @@ public class WidgetContainerLayout extends FrameLayout implements OnWidgetMotion
     }
 
     private float validateStartX(float currentX) {
-        if (deletePanelGravity == LEFT) {
+        if (isEnabled() && (deletePanelGravity == LEFT)) {
             return currentX + deletePanelLength;
         } else {
             return currentX;
@@ -417,7 +418,7 @@ public class WidgetContainerLayout extends FrameLayout implements OnWidgetMotion
     }
 
     private float validateStartY(float currentY) {
-        if (deletePanelGravity == TOP) {
+        if (isEnabled() && (deletePanelGravity == TOP)) {
             return currentY + deletePanelLength;
         } else {
             return currentY;
@@ -507,7 +508,7 @@ public class WidgetContainerLayout extends FrameLayout implements OnWidgetMotion
     }
 
     private void updateDeletePanel() {
-        if (enableTrash) {
+        if (isEnabled() && enableTrash) {
             deleteView.setVisibility(VISIBLE);
             switch (deletePanelGravity) {
                 case DeletePanelGravity.TOP:
