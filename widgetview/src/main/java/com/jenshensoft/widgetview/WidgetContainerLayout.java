@@ -17,7 +17,6 @@ import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.annotation.StyleRes;
 import android.util.AttributeSet;
-import android.util.Log;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.ViewParent;
@@ -45,6 +44,9 @@ import static com.jenshensoft.widgetview.WidgetContainerLayout.DeletePanelGravit
 import static com.jenshensoft.widgetview.WidgetContainerLayout.DeletePanelGravity.LEFT;
 import static com.jenshensoft.widgetview.WidgetContainerLayout.DeletePanelGravity.RIGHT;
 import static com.jenshensoft.widgetview.WidgetContainerLayout.DeletePanelGravity.TOP;
+import static com.jenshensoft.widgetview.WidgetContainerLayout.InvalidateState.NON_INVALIDATED;
+import static com.jenshensoft.widgetview.WidgetContainerLayout.InvalidateState.POSITION_INVALIDATED;
+import static com.jenshensoft.widgetview.WidgetContainerLayout.InvalidateState.POSITONS_WERE_SET;
 
 public class WidgetContainerLayout extends FrameLayout implements OnWidgetMotionListener {
 
@@ -65,8 +67,9 @@ public class WidgetContainerLayout extends FrameLayout implements OnWidgetMotion
     private List<WidgetView> widgets;
     private List<Point> points;
     private Paint paint;
+    @InvalidateState
+    private int invalidateState = NON_INVALIDATED;
     private boolean isOnAnimateWidget;
-    private boolean isLayoutInvalidated;
     private boolean inDeleteArea;
 
     public WidgetContainerLayout(@NonNull Context context) {
@@ -99,14 +102,16 @@ public class WidgetContainerLayout extends FrameLayout implements OnWidgetMotion
         init();
     }
 
+    private int lastWidth = -1;
+    private int lastHeight = -1;
     @Override
     protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
         super.onMeasure(widthMeasureSpec, heightMeasureSpec);
-        if (isLayoutInvalidated) {
-            isLayoutInvalidated = false;
+        if (isOnAnimateWidget) {
             return;
         }
-        if (isOnAnimateWidget) {
+        if (lastWidth == getMeasuredWidth() && lastHeight == getMeasuredHeight() && invalidateState == POSITION_INVALIDATED) {
+            invalidateState = NON_INVALIDATED;
             return;
         }
         createPoints(getMeasuredWidth(), getMeasuredHeight());
@@ -115,8 +120,9 @@ public class WidgetContainerLayout extends FrameLayout implements OnWidgetMotion
                 updateViewPosition(widget);
             }
         }
-
         updateDeletePanel();
+        lastWidth = getMeasuredWidth();
+        lastHeight = getMeasuredHeight();
     }
 
     @Override
@@ -164,8 +170,6 @@ public class WidgetContainerLayout extends FrameLayout implements OnWidgetMotion
                 deleteX + deleteView.getMeasuredWidth() + trashAvailabilityZone >= widgetPositionX &&
                 deleteY - trashAvailabilityZone - view.getMeasuredHeight() <= widgetPositionY &&
                 deleteY + deleteView.getMeasuredHeight() + trashAvailabilityZone >= widgetPositionY) {
-
-            Log.e("Tag", "delete zone");
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN) {
                 deleteView.setImageAlpha(255);
             } else {
@@ -173,7 +177,6 @@ public class WidgetContainerLayout extends FrameLayout implements OnWidgetMotion
             }
             inDeleteArea = true;
         } else {
-            Log.e("Tag", "not delete zone");
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN) {
                 deleteView.setImageAlpha(150);
             } else {
@@ -480,12 +483,16 @@ public class WidgetContainerLayout extends FrameLayout implements OnWidgetMotion
         vto.addOnGlobalLayoutListener(new ViewTreeObserver.OnGlobalLayoutListener() {
             @Override
             public void onGlobalLayout() {
-                isLayoutInvalidated = true;
                 view.getViewTreeObserver().removeGlobalOnLayoutListener(this);
                 FrameLayout.LayoutParams layoutParams = (LayoutParams) view.getLayoutParams();
                 layoutParams.width = width;
                 layoutParams.height = height;
                 view.setLayoutParams(layoutParams);
+                if (invalidateState == POSITONS_WERE_SET) {
+                    invalidateState = POSITION_INVALIDATED;
+                } else {
+                    invalidateState  = POSITONS_WERE_SET;
+                }
             }
         });
         view.requestLayout();
@@ -671,5 +678,13 @@ public class WidgetContainerLayout extends FrameLayout implements OnWidgetMotion
         int BOTTOM = 1;
         int LEFT = 2;
         int RIGHT = 3;
+    }
+
+    @IntDef({NON_INVALIDATED, POSITONS_WERE_SET, POSITION_INVALIDATED})
+    @Retention(RetentionPolicy.SOURCE)
+    public @interface InvalidateState {
+        int NON_INVALIDATED = 0;
+        int POSITONS_WERE_SET = 1;
+        int POSITION_INVALIDATED = 2;
     }
 }
