@@ -30,6 +30,7 @@ public class WidgetView extends FrameLayout {
     private int pointHeight = -1;
     private int pointWidth = -1;
     private int borderOffset = -1;
+    private int widgetElevation = -1;
     private boolean dragAndDropByLongClick = false;
     private int pointIcon = R.drawable.ic_point_angle;
     private boolean isPaddingValidated;
@@ -201,10 +202,14 @@ public class WidgetView extends FrameLayout {
             pointHeight = getResources().getDimensionPixelOffset(R.dimen.widgetView_point_height);
         }
 
+        if (widgetElevation == -1) {
+            widgetElevation = getResources().getDimensionPixelOffset(R.dimen.widgetView_widgetElevation);
+        }
+
         if (borderOffset == -1) {
             borderOffset = (pointHeight + pointWidth) / 4;
         }
-        swipeManager = new WidgetSwipeManager(getContext(), pointWidth, pointHeight, dragAndDropByLongClick);
+        swipeManager = new WidgetSwipeManager(getContext(), pointWidth, pointHeight, widgetElevation, dragAndDropByLongClick);
         paintPoints = new Paint();
         paintPoints.setStyle(Paint.Style.FILL);
         paintPoints.setStrokeWidth(1);

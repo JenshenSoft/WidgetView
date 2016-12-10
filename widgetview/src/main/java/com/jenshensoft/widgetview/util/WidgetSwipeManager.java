@@ -2,6 +2,7 @@ package com.jenshensoft.widgetview.util;
 
 
 import android.content.Context;
+import android.os.Build;
 import android.support.annotation.IntDef;
 import android.support.annotation.Nullable;
 import android.view.GestureDetector;
@@ -26,6 +27,7 @@ public class WidgetSwipeManager implements View.OnTouchListener {
 
     private final int pointWidth;
     private final int pointHeight;
+    private final int widgetElevation;
     private final boolean dragAndDropByLongClick;
     private final GestureDetector gestureDetector;
     private float lastXPosition;
@@ -40,9 +42,10 @@ public class WidgetSwipeManager implements View.OnTouchListener {
     @Nullable
     private View view;
 
-    public WidgetSwipeManager(Context context, int pointWidth, int pointHeight, boolean dragAndDropByLongClick) {
+    public WidgetSwipeManager(Context context, int pointWidth, int pointHeight, int widgetElevation, boolean dragAndDropByLongClick) {
         this.pointWidth = pointWidth;
         this.pointHeight = pointHeight;
+        this.widgetElevation = widgetElevation;
         this.dragAndDropByLongClick = dragAndDropByLongClick;
         this.gestureDetector = new GestureDetector(context, new LongPressGestureDetector());
     }
@@ -135,6 +138,9 @@ public class WidgetSwipeManager implements View.OnTouchListener {
     private boolean actionDown(View view, MotionEvent motionEvent) {
         motionAction = MotionEvent.ACTION_DOWN;
         this.view = view;
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+            view.setZ(view.getZ() + widgetElevation);
+        }
         if (dragAndDropByLongClick) {
             gestureDetector.onTouchEvent(motionEvent);
         }
@@ -185,6 +191,9 @@ public class WidgetSwipeManager implements View.OnTouchListener {
 
     private void actionUp(View view) {
         this.motionAction = MotionEvent.ACTION_UP;
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+            view.setZ(view.getZ() - widgetElevation);
+        }
         if (onWidgetMotionListener != null && motionInfo != null) {
             motionInfo.setCurrentWidgetPositionX(view.getX());
             motionInfo.setCurrentWidgetPositionY(view.getY());
