@@ -5,7 +5,6 @@ import android.content.Context;
 import android.content.res.TypedArray;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
-import android.graphics.Color;
 import android.graphics.Paint;
 import android.os.Build;
 import android.os.Parcel;
@@ -208,8 +207,7 @@ public class WidgetView extends FrameLayout {
         swipeManager = new WidgetSwipeManager(getContext(), pointWidth, pointHeight, dragAndDropByLongClick);
         paintPoints = new Paint();
         paintPoints.setStyle(Paint.Style.FILL);
-        paintPoints.setColor(Color.GREEN);
-        paintPoints.setStrokeWidth(5);
+        paintPoints.setStrokeWidth(1);
         cornerBitmap = Bitmap.createScaledBitmap(getBitmap(getContext(), pointIcon), pointWidth, pointHeight, false);
     }
 

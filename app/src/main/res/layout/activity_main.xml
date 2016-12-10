@@ -3,7 +3,6 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/colorAccent"
     android:fitsSystemWindows="true"
     android:orientation="vertical">
 
@@ -30,7 +29,6 @@
         <com.jenshensoft.widgetview.WidgetView
             android:layout_width="0dp"
             android:layout_height="0dp"
-            android:background="@color/colorPrimary"
             app:widgetView_corner_bottomLeft_columnLine="2"
             app:widgetView_corner_bottomLeft_rowLine="5"
             app:widgetView_corner_bottomRight_columnLine="4"
@@ -41,10 +39,31 @@
             app:widgetView_corner_topRight_rowLine="3"
             app:widgetView_dragAndDrop_byLongClick="false">
 
-            <!-- <ImageView
-                  android:layout_width="match_parent"
-                  android:layout_height="match_parent"
-                  android:background="@color/colorAccent" />-->
+            <ImageView
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:contentDescription="@null"
+                android:src="@drawable/cat" />
+        </com.jenshensoft.widgetview.WidgetView>
+
+        <com.jenshensoft.widgetview.WidgetView
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            app:widgetView_corner_bottomLeft_columnLine="1"
+            app:widgetView_corner_bottomLeft_rowLine="3"
+            app:widgetView_corner_bottomRight_columnLine="4"
+            app:widgetView_corner_bottomRight_rowLine="3"
+            app:widgetView_corner_topLeft_columnLine="1"
+            app:widgetView_corner_topLeft_rowLine="2"
+            app:widgetView_corner_topRight_columnLine="4"
+            app:widgetView_corner_topRight_rowLine="2"
+            app:widgetView_dragAndDrop_byLongClick="false">
+
+            <ImageView
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:contentDescription="@null"
+                android:src="@drawable/cat" />
 
         </com.jenshensoft.widgetview.WidgetView>
     </com.jenshensoft.widgetview.WidgetContainerLayout>

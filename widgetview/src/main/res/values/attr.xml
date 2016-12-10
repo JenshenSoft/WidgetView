@@ -22,6 +22,7 @@
         <attr name="widgetContainer_rowCount" format="integer" />
         <attr name="widgetContainer_enableTrash" format="boolean" />
         <attr name="widgetContainer_trashIcon" format="reference" />
+        <attr name="widgetContainer_linesColor" format="color" />
         <attr name="widgetContainer_autoConnect_AvailabilityZone" format="integer" />
         <attr name="widgetContainer_connectOnlyEmptyPoints" format="boolean" />
         <attr name="widgetContainer_deletePanelGravity">
