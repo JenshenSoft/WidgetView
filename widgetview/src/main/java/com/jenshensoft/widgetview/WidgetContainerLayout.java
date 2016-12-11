@@ -273,6 +273,7 @@ public class WidgetContainerLayout extends FrameLayout implements OnWidgetMotion
     }
 
     public void addWidgetView(@NonNull WidgetView view) {
+        view.setEnabled(isEnabled());
         this.addView(view);
     }
 
@@ -281,6 +282,14 @@ public class WidgetContainerLayout extends FrameLayout implements OnWidgetMotion
         ViewParent parent = view.getParent();
         ((ViewGroup) parent).removeView(view);
         widgets.remove(view);
+    }
+
+    public void setColumnCount(int columnCount) {
+        this.columnCount = columnCount;
+    }
+
+    public void setRowCount(int rowCount) {
+        this.rowCount = rowCount;
     }
 
 
@@ -347,8 +356,8 @@ public class WidgetContainerLayout extends FrameLayout implements OnWidgetMotion
         float columnWidth = (width + separatorWidth) / columnCount;
         float rowHeight = (height + separatorWidth) / rowCount;
 
-        for (int column = 0; column <= rowCount; column++) {
-            for (int row = 0; row <= columnCount; row++) {
+        for (int column = 0; column <= columnCount; column++) {
+            for (int row = 0; row <= rowCount; row++) {
                 points.add(new Point(currentX, currentY, column, row));
                 currentY += rowHeight;
             }
@@ -368,8 +377,8 @@ public class WidgetContainerLayout extends FrameLayout implements OnWidgetMotion
 
         float startX = validateStartX(0);
         float startY = validateStartY(0);
-        for (int column = 0; column <= rowCount; column++) {
-            for (int row = 0; row <= columnCount; row++) {
+        for (int column = 0; column <= columnCount; column++) {
+            for (int row = 0; row <= rowCount; row++) {
                 canvas.drawLine(startX, currentY, startX + width, currentY, paint);
                 currentY += rowHeight;
             }
