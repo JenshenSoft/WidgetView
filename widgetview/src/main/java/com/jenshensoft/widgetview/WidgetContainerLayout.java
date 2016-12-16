@@ -41,6 +41,9 @@ import java.util.List;
 import java.util.Set;
 import java.util.TreeSet;
 
+import static com.jenshensoft.widgetview.WidgetContainerLayout.ContainerDrawState.InvalidateState.NON_INVALIDATED;
+import static com.jenshensoft.widgetview.WidgetContainerLayout.ContainerDrawState.InvalidateState.POSITION_INVALIDATED;
+import static com.jenshensoft.widgetview.WidgetContainerLayout.ContainerDrawState.InvalidateState.POSITION_UPDATED;
 import static com.jenshensoft.widgetview.WidgetContainerLayout.DeletePanelGravity.BOTTOM;
 import static com.jenshensoft.widgetview.WidgetContainerLayout.DeletePanelGravity.LEFT;
 import static com.jenshensoft.widgetview.WidgetContainerLayout.DeletePanelGravity.RIGHT;
@@ -65,9 +68,11 @@ public class WidgetContainerLayout extends FrameLayout implements OnWidgetMotion
     private List<WidgetView> widgets;
     private List<Point> points;
     private Paint paint;
+    private ContainerDrawState drawState;
     private boolean isOnAnimateWidget;
-    private boolean isLayoutInvalidated;
     private boolean inDeleteArea;
+    private int lastWidth = -1;
+    private int lastHeight = -1;
     @Nullable
     private OnWidgetRemovedCallback onWidgetRemovedCallback;
 
@@ -104,11 +109,11 @@ public class WidgetContainerLayout extends FrameLayout implements OnWidgetMotion
     @Override
     protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
         super.onMeasure(widthMeasureSpec, heightMeasureSpec);
-        if (isLayoutInvalidated) {
-            isLayoutInvalidated = false;
+        if (isOnAnimateWidget) {
             return;
         }
-        if (isOnAnimateWidget) {
+        if (lastWidth == getMeasuredWidth() && lastHeight == getMeasuredHeight() && drawState.getInvalidateState() == POSITION_INVALIDATED) {
+            drawState.setState(NON_INVALIDATED);
             return;
         }
         createPoints(getMeasuredWidth(), getMeasuredHeight());
@@ -119,6 +124,8 @@ public class WidgetContainerLayout extends FrameLayout implements OnWidgetMotion
         }
 
         updateDeletePanel();
+        lastWidth = getMeasuredWidth();
+        lastHeight = getMeasuredHeight();
     }
 
     @Override
@@ -137,10 +144,17 @@ public class WidgetContainerLayout extends FrameLayout implements OnWidgetMotion
             WidgetView widgetView = (WidgetView) child;
             widgetView.setOnWidgetMoveUpListener(this);
             widgets.add(widgetView);
+            drawState.setWidgetsCount(widgets.size());
         } else if (deleteView != child) {
             ((ViewGroup) child.getParent()).removeView(child);
             addViewForWidget(child);
         }
+    }
+
+    @Override
+    public void onViewRemoved(View child) {
+        super.onViewRemoved(child);
+        drawState.setWidgetsCount(widgets.size());
     }
 
     @Override
@@ -265,6 +279,7 @@ public class WidgetContainerLayout extends FrameLayout implements OnWidgetMotion
     }
 
     public void addWidgetView(@NonNull WidgetView view) {
+        view.setEnabled(isEnabled());
         this.addView(view);
     }
 
@@ -275,9 +290,18 @@ public class WidgetContainerLayout extends FrameLayout implements OnWidgetMotion
         widgets.remove(view);
     }
 
+    public void setColumnCount(int columnCount) {
+        this.columnCount = columnCount;
+    }
+
+    public void setRowCount(int rowCount) {
+        this.rowCount = rowCount;
+    }
+
     public void setOnWidgetRemovedCallback(@Nullable OnWidgetRemovedCallback onWidgetRemovedCallback) {
         this.onWidgetRemovedCallback = onWidgetRemovedCallback;
     }
+
 
     /* private methods */
 
@@ -297,6 +321,7 @@ public class WidgetContainerLayout extends FrameLayout implements OnWidgetMotion
 
         points = new ArrayList<>();
         widgets = new ArrayList<>();
+        drawState = new ContainerDrawState(widgets.size());
         paint = new Paint();
         paint.setColor(linesColor);
         paint.setStrokeWidth(separatorWidth);
@@ -341,8 +366,8 @@ public class WidgetContainerLayout extends FrameLayout implements OnWidgetMotion
         float columnWidth = (width + separatorWidth) / columnCount;
         float rowHeight = (height + separatorWidth) / rowCount;
 
-        for (int column = 0; column <= rowCount; column++) {
-            for (int row = 0; row <= columnCount; row++) {
+        for (int column = 0; column <= columnCount; column++) {
+            for (int row = 0; row <= rowCount; row++) {
                 points.add(new Point(currentX, currentY, column, row));
                 currentY += rowHeight;
             }
@@ -362,8 +387,8 @@ public class WidgetContainerLayout extends FrameLayout implements OnWidgetMotion
 
         float startX = validateStartX(0);
         float startY = validateStartY(0);
-        for (int column = 0; column <= rowCount; column++) {
-            for (int row = 0; row <= columnCount; row++) {
+        for (int column = 0; column <= columnCount; column++) {
+            for (int row = 0; row <= rowCount; row++) {
                 canvas.drawLine(startX, currentY, startX + width, currentY, paint);
                 currentY += rowHeight;
             }
@@ -388,7 +413,7 @@ public class WidgetContainerLayout extends FrameLayout implements OnWidgetMotion
     }
 
     private float validateWidth(float width) {
-        if (deletePanelGravity == LEFT || deletePanelGravity == RIGHT) {
+        if (isEnabled() && (deletePanelGravity == LEFT || deletePanelGravity == RIGHT)) {
             return width - deletePanelLength;
         } else {
             return width;
@@ -396,7 +421,7 @@ public class WidgetContainerLayout extends FrameLayout implements OnWidgetMotion
     }
 
     private float validateHeight(float height) {
-        if (deletePanelGravity == TOP || deletePanelGravity == BOTTOM) {
+        if (isEnabled() && (deletePanelGravity == TOP || deletePanelGravity == BOTTOM)) {
             return height - deletePanelLength;
         } else {
             return height;
@@ -404,7 +429,7 @@ public class WidgetContainerLayout extends FrameLayout implements OnWidgetMotion
     }
 
     private float validateStartX(float currentX) {
-        if (deletePanelGravity == LEFT) {
+        if (isEnabled() && (deletePanelGravity == LEFT)) {
             return currentX + deletePanelLength;
         } else {
             return currentX;
@@ -412,7 +437,7 @@ public class WidgetContainerLayout extends FrameLayout implements OnWidgetMotion
     }
 
     private float validateStartY(float currentY) {
-        if (deletePanelGravity == TOP) {
+        if (isEnabled() && (deletePanelGravity == TOP)) {
             return currentY + deletePanelLength;
         } else {
             return currentY;
@@ -485,19 +510,24 @@ public class WidgetContainerLayout extends FrameLayout implements OnWidgetMotion
         vto.addOnGlobalLayoutListener(new ViewTreeObserver.OnGlobalLayoutListener() {
             @Override
             public void onGlobalLayout() {
-                isLayoutInvalidated = true;
                 view.getViewTreeObserver().removeGlobalOnLayoutListener(this);
                 FrameLayout.LayoutParams layoutParams = (LayoutParams) view.getLayoutParams();
                 layoutParams.width = width;
                 layoutParams.height = height;
                 view.setLayoutParams(layoutParams);
+
+                if (drawState.getInvalidateState() == NON_INVALIDATED) {
+                    drawState.widgetPositionUpdated();
+                } else {
+                    drawState.setState(POSITION_INVALIDATED);
+                }
             }
         });
         view.requestLayout();
     }
 
     private void updateDeletePanel() {
-        if (enableTrash) {
+        if (isEnabled() && enableTrash) {
             deleteView.setVisibility(VISIBLE);
             switch (deletePanelGravity) {
                 case DeletePanelGravity.TOP:
@@ -676,5 +706,48 @@ public class WidgetContainerLayout extends FrameLayout implements OnWidgetMotion
         int BOTTOM = 1;
         int LEFT = 2;
         int RIGHT = 3;
+    }
+
+    public static class ContainerDrawState {
+
+        @InvalidateState
+        private int invalidateState = NON_INVALIDATED;
+
+        private int validatedWidgets;
+
+        private int widgetsCount;
+
+        ContainerDrawState(int widgetsCount) {
+            this.widgetsCount = widgetsCount;
+        }
+
+        void widgetPositionUpdated() {
+            validatedWidgets++;
+            if (widgetsCount == validatedWidgets) {
+                validatedWidgets = 0;
+                invalidateState = POSITION_UPDATED;
+            }
+        }
+
+        void setWidgetsCount(int widgetsCount) {
+            this.widgetsCount = widgetsCount;
+        }
+
+        @InvalidateState
+        int getInvalidateState() {
+            return invalidateState;
+        }
+
+        void setState(@InvalidateState int state) {
+            this.invalidateState = state;
+        }
+
+        @IntDef({NON_INVALIDATED, POSITION_UPDATED, POSITION_INVALIDATED})
+        @Retention(RetentionPolicy.SOURCE)
+        @interface InvalidateState {
+            int NON_INVALIDATED = 0;
+            int POSITION_UPDATED = 1;
+            int POSITION_INVALIDATED = 2;
+        }
     }
 }

@@ -21,6 +21,7 @@ public class MainActivity extends AppCompatActivity {
         View view = new Button(this);
         view.setLayoutParams(new FrameLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
         view.setBackgroundColor(ContextCompat.getColor(this, R.color.colorAccent));
+        //widgetContainer.setEnabled(false);
         //widgetContainer.addViewForWidget(view);
     }
 }
