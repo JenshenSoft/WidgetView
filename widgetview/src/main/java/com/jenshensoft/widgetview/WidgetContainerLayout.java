@@ -17,7 +17,6 @@ import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.annotation.StyleRes;
 import android.util.AttributeSet;
-import android.util.Log;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.ViewParent;
@@ -27,10 +26,11 @@ import android.widget.FrameLayout;
 import android.widget.ImageView;
 
 import com.jenshen.awesomeanimation.AwesomeAnimation;
+import com.jenshensoft.widgetview.callback.OnWidgetRemovedCallback;
 import com.jenshensoft.widgetview.entity.Point;
 import com.jenshensoft.widgetview.entity.WidgetMotionInfo;
 import com.jenshensoft.widgetview.entity.WidgetPosition;
-import com.jenshensoft.widgetview.listener.OnWidgetMotionListener;
+import com.jenshensoft.widgetview.callback.OnWidgetMotionsCallbacks;
 import com.jenshensoft.widgetview.util.BitmapUtil;
 
 import java.lang.annotation.Retention;
@@ -46,7 +46,7 @@ import static com.jenshensoft.widgetview.WidgetContainerLayout.DeletePanelGravit
 import static com.jenshensoft.widgetview.WidgetContainerLayout.DeletePanelGravity.RIGHT;
 import static com.jenshensoft.widgetview.WidgetContainerLayout.DeletePanelGravity.TOP;
 
-public class WidgetContainerLayout extends FrameLayout implements OnWidgetMotionListener {
+public class WidgetContainerLayout extends FrameLayout implements OnWidgetMotionsCallbacks {
 
     private int columnCount = 4;
     private int rowCount = 4;
@@ -68,6 +68,8 @@ public class WidgetContainerLayout extends FrameLayout implements OnWidgetMotion
     private boolean isOnAnimateWidget;
     private boolean isLayoutInvalidated;
     private boolean inDeleteArea;
+    @Nullable
+    private OnWidgetRemovedCallback onWidgetRemovedCallback;
 
     public WidgetContainerLayout(@NonNull Context context) {
         super(context);
@@ -164,8 +166,6 @@ public class WidgetContainerLayout extends FrameLayout implements OnWidgetMotion
                 deleteX + deleteView.getMeasuredWidth() + trashAvailabilityZone >= widgetPositionX &&
                 deleteY - trashAvailabilityZone - view.getMeasuredHeight() <= widgetPositionY &&
                 deleteY + deleteView.getMeasuredHeight() + trashAvailabilityZone >= widgetPositionY) {
-
-            Log.e("Tag", "delete zone");
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN) {
                 deleteView.setImageAlpha(255);
             } else {
@@ -173,7 +173,6 @@ public class WidgetContainerLayout extends FrameLayout implements OnWidgetMotion
             }
             inDeleteArea = true;
         } else {
-            Log.e("Tag", "not delete zone");
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN) {
                 deleteView.setImageAlpha(150);
             } else {
@@ -185,7 +184,7 @@ public class WidgetContainerLayout extends FrameLayout implements OnWidgetMotion
 
     @SuppressWarnings("ConstantConditions")
     @Override
-    public void onActionUp(final WidgetView view, WidgetMotionInfo motionInfo) {
+    public void onActionUp(final WidgetView view, final WidgetMotionInfo motionInfo) {
         if (inDeleteArea) {
             AwesomeAnimation awesomeAnimation = new AwesomeAnimation.Builder(view)
                     .setX(AwesomeAnimation.CoordinationMode.COORDINATES, motionInfo.getCurrentWidgetPositionX(), deleteView.getX() - view.getMeasuredWidth() / 2 + deleteView.getMeasuredWidth() / 2)
@@ -202,6 +201,9 @@ public class WidgetContainerLayout extends FrameLayout implements OnWidgetMotion
                         @Override
                         public void onAnimationEnd(Animator animation) {
                             removeWidgetView(view);
+                            if (onWidgetRemovedCallback != null) {
+                                onWidgetRemovedCallback.onWidgetRemoved(view, motionInfo);
+                            }
                         }
                     });
 
@@ -273,6 +275,9 @@ public class WidgetContainerLayout extends FrameLayout implements OnWidgetMotion
         widgets.remove(view);
     }
 
+    public void setOnWidgetRemovedCallback(@Nullable OnWidgetRemovedCallback onWidgetRemovedCallback) {
+        this.onWidgetRemovedCallback = onWidgetRemovedCallback;
+    }
 
     /* private methods */
 

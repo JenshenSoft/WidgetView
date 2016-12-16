@@ -11,7 +11,7 @@ import android.widget.FrameLayout;
 
 import com.jenshensoft.widgetview.WidgetView;
 import com.jenshensoft.widgetview.entity.WidgetMotionInfo;
-import com.jenshensoft.widgetview.listener.OnWidgetMotionListener;
+import com.jenshensoft.widgetview.callback.OnWidgetMotionsCallbacks;
 
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
@@ -36,7 +36,7 @@ public class WidgetSwipeManager implements View.OnTouchListener {
     @Nullable
     private WidgetMotionInfo motionInfo;
     @Nullable
-    private OnWidgetMotionListener onWidgetMotionListener;
+    private OnWidgetMotionsCallbacks onWidgetMotionListener;
     @Nullable
     private View view;
 
@@ -47,7 +47,7 @@ public class WidgetSwipeManager implements View.OnTouchListener {
         this.gestureDetector = new GestureDetector(context, new LongPressGestureDetector());
     }
 
-    public void setOnWidgetMotionListener(@Nullable OnWidgetMotionListener onWidgetMotionListener) {
+    public void setOnWidgetMotionListener(@Nullable OnWidgetMotionsCallbacks onWidgetMotionListener) {
         this.onWidgetMotionListener = onWidgetMotionListener;
     }
 

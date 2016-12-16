@@ -1,10 +1,10 @@
-package com.jenshensoft.widgetview.listener;
+package com.jenshensoft.widgetview.callback;
 
 
 import com.jenshensoft.widgetview.WidgetView;
 import com.jenshensoft.widgetview.entity.WidgetMotionInfo;
 
-public interface OnWidgetMotionListener {
+public interface OnWidgetMotionsCallbacks {
 
     void onActionDown(WidgetView view, WidgetMotionInfo motionInfo);
 

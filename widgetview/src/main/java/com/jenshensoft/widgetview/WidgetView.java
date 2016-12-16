@@ -19,7 +19,7 @@ import android.view.MotionEvent;
 import android.widget.FrameLayout;
 
 import com.jenshensoft.widgetview.entity.WidgetPosition;
-import com.jenshensoft.widgetview.listener.OnWidgetMotionListener;
+import com.jenshensoft.widgetview.callback.OnWidgetMotionsCallbacks;
 import com.jenshensoft.widgetview.util.WidgetSwipeManager;
 
 import static com.jenshensoft.widgetview.entity.WidgetPosition.EMPTY;
@@ -127,7 +127,7 @@ public class WidgetView extends FrameLayout {
         return swipeManager.isInTouchMode();
     }
 
-    public void setOnWidgetMoveUpListener(@Nullable OnWidgetMotionListener onWidgetMotionListener) {
+    public void setOnWidgetMoveUpListener(@Nullable OnWidgetMotionsCallbacks onWidgetMotionListener) {
         swipeManager.setOnWidgetMotionListener(onWidgetMotionListener);
     }
 
