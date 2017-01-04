@@ -1,5 +1,5 @@
 # WidgetView
-This lib constains a WifgetView and WidgetContainerLayout for working with custom widgets. 
+This library contains a WidgetView and WidgetContainerLayout for working with custom widgets.
 
 ## WidgetView
 A viewgroup for scaling and dragging all types of views.
