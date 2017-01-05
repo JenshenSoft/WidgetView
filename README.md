@@ -1,5 +1,7 @@
+ [ ![Download](https://api.bintray.com/packages/jenshen1992/ua.jenshensoft/widgetview/images/download.svg?version=0.65) ](https://bintray.com/jenshen1992/ua.jenshensoft/widgetview/0.65/link)
+
 # WidgetView
-This library contains a WidgetView and WidgetContainerLayout for working with custom widgets.
+This library contains the WidgetView and the WidgetContainerLayout for working with scaling and dragging views like android widgets.
 
 ## WidgetView
 A viewgroup for scaling and dragging all types of views.
